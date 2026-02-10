@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Trash2, Film, Tv, ArrowLeft } from "lucide-react";
+import { ExternalLink, Trash2, Film, Tv, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl } from "@/lib/tmdb";
-import { getService, getDeepLink } from "@/lib/streaming-services";
+import { getService, getDeepLink, SERVICE_LIST } from "@/lib/streaming-services";
+import { toast } from "sonner";
 
 interface Cue {
   id: string;
@@ -18,6 +19,55 @@ interface Cue {
   release_year: string | null;
   overview: string | null;
 }
+
+const ServicePicker = ({
+  current,
+  onSelect,
+}: {
+  current: string;
+  onSelect: (id: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const service = getService(current);
+  const label = service?.name || (current === "unassigned" ? "Assign Service" : current);
+  const logo = service?.logo || "📺";
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium glass hover:border-primary/50 transition-colors"
+      >
+        <span>{logo}</span>
+        <span className="text-foreground truncate max-w-[80px]">{label}</span>
+        <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full mt-1 z-50 glass-strong rounded-lg py-1 min-w-[160px] shadow-xl border border-border">
+            {SERVICE_LIST.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => {
+                  onSelect(s.id);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-secondary/60 transition-colors ${
+                  s.id === current ? "text-primary" : "text-foreground"
+                }`}
+              >
+                <span>{s.logo}</span>
+                <span>{s.name}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 const MyQueue = () => {
   const [cues, setCues] = useState<Cue[]>([]);
@@ -41,6 +91,24 @@ const MyQueue = () => {
     setCues((prev) => prev.filter((c) => c.id !== id));
   };
 
+  const updateService = async (id: string, serviceId: string) => {
+    const { error } = await supabase
+      .from("cues")
+      .update({ service_provider: serviceId })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to update service.");
+      return;
+    }
+
+    setCues((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, service_provider: serviceId } : c))
+    );
+    const name = getService(serviceId)?.name || serviceId;
+    toast.success(`Moved to ${name}`);
+  };
+
   // Group by service provider
   const grouped = cues.reduce<Record<string, Cue[]>>((acc, cue) => {
     const key = cue.service_provider;
@@ -48,6 +116,13 @@ const MyQueue = () => {
     acc[key].push(cue);
     return acc;
   }, {});
+
+  // Sort groups: "unassigned" last
+  const sortedGroups = Object.entries(grouped).sort(([a], [b]) => {
+    if (a === "unassigned") return 1;
+    if (b === "unassigned") return -1;
+    return a.localeCompare(b);
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,7 +158,7 @@ const MyQueue = () => {
         ) : (
           <div className="space-y-10">
             <AnimatePresence>
-              {Object.entries(grouped).map(([provider, items]) => {
+              {sortedGroups.map(([provider, items]) => {
                 const service = getService(provider);
                 return (
                   <motion.section
@@ -96,7 +171,7 @@ const MyQueue = () => {
                     <div className="flex items-center gap-3 mb-5">
                       <span className="text-2xl">{service?.logo || "📺"}</span>
                       <h2 className="text-lg font-bold text-foreground">
-                        {service?.name || provider}
+                        {provider === "unassigned" ? "Unassigned" : service?.name || provider}
                       </h2>
                       <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
                         {items.length}
@@ -140,18 +215,26 @@ const MyQueue = () => {
                                   <span className="uppercase">{cue.media_type}</span>
                                   {cue.release_year && <span>· {cue.release_year}</span>}
                                 </div>
+                                <div className="mt-1.5">
+                                  <ServicePicker
+                                    current={cue.service_provider}
+                                    onSelect={(serviceId) => updateService(cue.id, serviceId)}
+                                  />
+                                </div>
                               </div>
 
                               <div className="flex items-center gap-2 mt-2">
-                                <a
-                                  href={link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity glow"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  Watch Now
-                                </a>
+                                {cue.service_provider !== "unassigned" && (
+                                  <a
+                                    href={link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity glow"
+                                  >
+                                    <ExternalLink className="h-3 w-3" />
+                                    Watch Now
+                                  </a>
+                                )}
                                 <button
                                   onClick={() => removeCue(cue.id)}
                                   className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
