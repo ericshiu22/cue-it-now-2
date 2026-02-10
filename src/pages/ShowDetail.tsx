@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Calendar, Film, Tv, ExternalLink } from "lucide-react";
+import { ArrowLeft, Star, Calendar, Film, Tv, ExternalLink, Check } from "lucide-react";
 import { getImageUrl } from "@/lib/tmdb";
 import { SERVICE_LIST } from "@/lib/streaming-services";
+import { addCue } from "@/lib/cue-actions";
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
@@ -28,6 +29,8 @@ const ShowDetail = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
   const [show, setShow] = useState<ShowDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cued, setCued] = useState(false);
+  const [cueing, setCueing] = useState(false);
 
   const apiKey = localStorage.getItem("tmdb_key") || "";
 
@@ -161,6 +164,35 @@ const ShowDetail = () => {
             )}
 
             <p className="text-muted-foreground leading-relaxed max-w-2xl">{show.overview}</p>
+
+            {/* Cue It button */}
+            <button
+              onClick={async () => {
+                if (cued || cueing) return;
+                setCueing(true);
+                const ok = await addCue({
+                  tmdb_id: show.id,
+                  title,
+                  poster_path: show.poster_path,
+                  media_type: type || "movie",
+                  vote_average: show.vote_average,
+                  release_year: year,
+                  overview: show.overview,
+                });
+                setCueing(false);
+                if (ok) setCued(true);
+              }}
+              disabled={cued || cueing}
+              className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-opacity glow ${
+                cued
+                  ? "bg-secondary text-foreground"
+                  : "bg-primary text-primary-foreground hover:opacity-90"
+              } disabled:opacity-70`}
+            >
+              {cued ? (
+                <><Check className="h-4 w-4" /> Added to Queue</>
+              ) : cueing ? "Saving..." : "🎬 Cue It"}
+            </button>
           </motion.div>
         </div>
 

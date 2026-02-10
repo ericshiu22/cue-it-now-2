@@ -1,7 +1,9 @@
-import { Star } from "lucide-react";
+import { useState } from "react";
+import { Star, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl, type TMDBResult } from "@/lib/tmdb";
+import { addCue } from "@/lib/cue-actions";
 
 interface MovieCardProps {
   item: TMDBResult;
@@ -10,6 +12,8 @@ interface MovieCardProps {
 
 const MovieCard = ({ item, index }: MovieCardProps) => {
   const navigate = useNavigate();
+  const [cued, setCued] = useState(false);
+  const [saving, setSaving] = useState(false);
   const title = item.title || item.name || "Unknown";
   const year = (item.release_date || item.first_air_date || "").slice(0, 4);
   const poster = getImageUrl(item.poster_path, "w500");
@@ -18,6 +22,23 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
 
   const handleClick = () => {
     navigate(`/show/${item.media_type}/${item.id}`);
+  };
+
+  const handleCue = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (cued || saving) return;
+    setSaving(true);
+    const ok = await addCue({
+      tmdb_id: item.id,
+      title,
+      poster_path: item.poster_path,
+      media_type: item.media_type,
+      vote_average: item.vote_average,
+      release_year: year,
+      overview: item.overview,
+    });
+    setSaving(false);
+    if (ok) setCued(true);
   };
 
   return (
@@ -46,10 +67,17 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
           <p className="text-sm text-muted-foreground line-clamp-3">{item.overview}</p>
           <button
-            onClick={(e) => e.stopPropagation()}
-            className="mt-3 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity glow"
+            onClick={handleCue}
+            disabled={cued || saving}
+            className={`mt-3 w-full py-2.5 rounded-lg font-semibold text-sm transition-opacity glow ${
+              cued
+                ? "bg-secondary text-foreground"
+                : "bg-primary text-primary-foreground hover:opacity-90"
+            } disabled:opacity-70`}
           >
-            🎬 Cue It
+            {cued ? (
+              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4" /> Cued</span>
+            ) : saving ? "..." : "🎬 Cue It"}
           </button>
         </div>
 

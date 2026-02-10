@@ -51,20 +51,13 @@ const MyQueue = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass-strong border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <h1 className="text-xl font-bold text-foreground">
-              My <span className="text-gradient">Queue</span>
-            </h1>
-          </div>
-          <span className="text-sm text-muted-foreground">{cues.length} titles</span>
-        </div>
-      </header>
+      {/* Page header */}
+      <div className="max-w-7xl mx-auto px-4 pt-8 pb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">
+          My <span className="text-gradient">Queue</span>
+        </h1>
+        <span className="text-sm text-muted-foreground">{cues.length} titles</span>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (
