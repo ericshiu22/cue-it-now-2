@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { getImageUrl, type TMDBResult } from "@/lib/tmdb";
 
 interface MovieCardProps {
@@ -8,11 +9,16 @@ interface MovieCardProps {
 }
 
 const MovieCard = ({ item, index }: MovieCardProps) => {
+  const navigate = useNavigate();
   const title = item.title || item.name || "Unknown";
   const year = (item.release_date || item.first_air_date || "").slice(0, 4);
   const poster = getImageUrl(item.poster_path, "w500");
   const rating = item.vote_average?.toFixed(1);
   const mediaType = item.media_type === "tv" ? "TV" : "Movie";
+
+  const handleClick = () => {
+    navigate(`/show/${item.media_type}/${item.id}`);
+  };
 
   return (
     <motion.div
@@ -20,6 +26,7 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
       className="group relative cursor-pointer"
+      onClick={handleClick}
     >
       <div className="relative aspect-[2/3] rounded-xl overflow-hidden glass">
         {poster ? (
@@ -38,7 +45,10 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
           <p className="text-sm text-muted-foreground line-clamp-3">{item.overview}</p>
-          <button className="mt-3 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity glow">
+          <button
+            onClick={(e) => e.stopPropagation()}
+            className="mt-3 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity glow"
+          >
             🎬 Cue It
           </button>
         </div>
