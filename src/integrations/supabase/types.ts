@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cues: {
+        Row: {
+          created_at: string
+          deep_link: string | null
+          id: string
+          media_type: string
+          overview: string | null
+          poster_path: string | null
+          release_year: string | null
+          service_provider: string
+          title: string
+          tmdb_id: number
+          user_id: string
+          vote_average: number | null
+        }
+        Insert: {
+          created_at?: string
+          deep_link?: string | null
+          id?: string
+          media_type: string
+          overview?: string | null
+          poster_path?: string | null
+          release_year?: string | null
+          service_provider: string
+          title: string
+          tmdb_id: number
+          user_id: string
+          vote_average?: number | null
+        }
+        Update: {
+          created_at?: string
+          deep_link?: string | null
+          id?: string
+          media_type?: string
+          overview?: string | null
+          poster_path?: string | null
+          release_year?: string | null
+          service_provider?: string
+          title?: string
+          tmdb_id?: number
+          user_id?: string
+          vote_average?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
