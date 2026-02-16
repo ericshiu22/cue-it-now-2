@@ -37,7 +37,7 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
   const mediaType = item.media_type === "tv" ? "TV" : "Movie";
 
   useEffect(() => {
-    const apiKey = localStorage.getItem("tmdb_api_key");
+    const apiKey = localStorage.getItem("tmdb_key");
     if (!apiKey || !item.id || !item.media_type) return;
     getWatchProviders(item.media_type, item.id, apiKey).then((result) => {
       if (result) {
