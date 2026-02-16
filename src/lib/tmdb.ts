@@ -23,6 +23,19 @@ export interface TMDBResult {
   genre_ids: number[];
 }
 
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
+}
+
+export interface WatchProvidersResult {
+  flatrate?: WatchProvider[];
+  buy?: WatchProvider[];
+  rent?: WatchProvider[];
+  ads?: WatchProvider[];
+}
+
 export interface TMDBSearchResponse {
   page: number;
   results: TMDBResult[];
@@ -44,4 +57,22 @@ export const getTrending = async (apiKey: string): Promise<TMDBSearchResponse> =
   );
   if (!res.ok) throw new Error("TMDB trending failed");
   return res.json();
+};
+
+export const getWatchProviders = async (
+  mediaType: "movie" | "tv",
+  id: number,
+  apiKey: string
+): Promise<WatchProvidersResult | null> => {
+  try {
+    const res = await fetch(
+      `${TMDB_BASE}/${mediaType}/${id}/watch/providers?api_key=${apiKey}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    // Use US providers by default
+    return data.results?.US || null;
+  } catch {
+    return null;
+  }
 };
