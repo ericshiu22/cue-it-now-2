@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Trash2, Film, Tv, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -28,43 +29,59 @@ const ServicePicker = ({
   onSelect: (id: string) => void;
 }) => {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const service = getService(current);
   const label = service?.name || (current === "unassigned" ? "Assign Service" : current);
   const logo = service?.logo || "📺";
 
+  const handleOpen = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setOpen(!open);
+  };
+
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium glass hover:border-primary/50 transition-colors"
+        ref={triggerRef}
+        onClick={handleOpen}
+        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium bg-secondary border border-border hover:border-primary/50 transition-colors"
       >
         <span>{logo}</span>
         <span className="text-foreground truncate max-w-[80px]">{label}</span>
         <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-1 z-50 glass-strong rounded-lg py-1 min-w-[160px] shadow-xl border border-border">
-            {SERVICE_LIST.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => {
-                  onSelect(s.id);
-                  setOpen(false);
-                }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-secondary/60 transition-colors ${
-                  s.id === current ? "text-primary" : "text-foreground"
-                }`}
-              >
-                <span>{s.logo}</span>
-                <span>{s.name}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      {open &&
+        ReactDOM.createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+            <div
+              style={{ top: menuPos.top, left: menuPos.left }}
+              className="fixed z-[9999] rounded-lg py-1 min-w-[160px] shadow-xl border border-border bg-popover"
+            >
+              {SERVICE_LIST.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    onSelect(s.id);
+                    setOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-accent transition-colors ${
+                    s.id === current ? "text-primary" : "text-popover-foreground"
+                  }`}
+                >
+                  <span>{s.logo}</span>
+                  <span>{s.name}</span>
+                </button>
+              ))}
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 };
