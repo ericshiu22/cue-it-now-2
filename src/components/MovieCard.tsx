@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getImageUrl, type TMDBResult } from "@/lib/tmdb";
+import { getImageUrl, getWatchProviders, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
 import { addCue } from "@/lib/cue-actions";
 
 interface MovieCardProps {
@@ -14,11 +14,25 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
   const navigate = useNavigate();
   const [cued, setCued] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [providers, setProviders] = useState<WatchProvider[]>([]);
   const title = item.title || item.name || "Unknown";
   const year = (item.release_date || item.first_air_date || "").slice(0, 4);
   const poster = getImageUrl(item.poster_path, "w500");
   const rating = item.vote_average?.toFixed(1);
   const mediaType = item.media_type === "tv" ? "TV" : "Movie";
+
+  useEffect(() => {
+    const apiKey = localStorage.getItem("tmdb_api_key");
+    if (!apiKey || !item.id || !item.media_type) return;
+    getWatchProviders(item.media_type, item.id, apiKey).then((result) => {
+      if (result) {
+        // Combine flatrate (subscription) and ads (free with ads), deduplicate
+        const all = [...(result.flatrate || []), ...(result.ads || [])];
+        const unique = Array.from(new Map(all.map((p) => [p.provider_id, p])).values());
+        setProviders(unique.slice(0, 5));
+      }
+    });
+  }, [item.id, item.media_type]);
 
   const handleClick = () => {
     navigate(`/show/${item.media_type}/${item.id}`);
@@ -98,6 +112,20 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
             </span>
           )}
         </div>
+        {/* Streaming providers */}
+        {providers.length > 0 && (
+          <div className="flex items-center gap-1 mt-1">
+            {providers.map((p) => (
+              <img
+                key={p.provider_id}
+                src={getImageUrl(p.logo_path, "w200") || ""}
+                alt={p.provider_name}
+                title={p.provider_name}
+                className="h-5 w-5 rounded-sm object-cover"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );
