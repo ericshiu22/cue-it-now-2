@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Calendar, Film, Tv, ExternalLink, Check } from "lucide-react";
-import { getImageUrl } from "@/lib/tmdb";
-import { SERVICE_LIST } from "@/lib/streaming-services";
+import { getImageUrl, getWatchProviders, type WatchProvider } from "@/lib/tmdb";
 import { addCue } from "@/lib/cue-actions";
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
@@ -31,6 +30,8 @@ const ShowDetail = () => {
   const [loading, setLoading] = useState(true);
   const [cued, setCued] = useState(false);
   const [cueing, setCueing] = useState(false);
+  const [streamProviders, setStreamProviders] = useState<WatchProvider[]>([]);
+  const [rentBuyProviders, setRentBuyProviders] = useState<WatchProvider[]>([]);
 
   const apiKey = localStorage.getItem("tmdb_key") || "";
 
@@ -47,6 +48,21 @@ const ShowDetail = () => {
       setLoading(false);
     };
     fetchDetails();
+
+    // Fetch watch providers
+    if (type === "movie" || type === "tv") {
+      getWatchProviders(type as "movie" | "tv", Number(id), apiKey).then((result) => {
+        if (result) {
+          const flatrate = [...(result.flatrate || []), ...(result.ads || [])];
+          const unique = Array.from(new Map(flatrate.map((p) => [p.provider_id, p])).values());
+          setStreamProviders(unique);
+          const txn = [...(result.rent || []), ...(result.buy || [])];
+          const uniqueTxn = Array.from(new Map(txn.map((p) => [p.provider_id, p])).values())
+            .filter((p) => !unique.some((s) => s.provider_id === p.provider_id));
+          setRentBuyProviders(uniqueTxn);
+        }
+      });
+    }
   }, [apiKey, type, id]);
 
   if (loading) {
@@ -196,35 +212,60 @@ const ShowDetail = () => {
           </motion.div>
         </div>
 
-        {/* Streaming Services */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mt-12 mb-16"
-        >
-          <h2 className="text-lg font-bold text-foreground mb-5">
-            Where to <span className="text-gradient">Watch</span>
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {SERVICE_LIST.map((service) => (
-              <a
-                key={service.id}
-                href={service.searchUrl(title)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glass group flex items-center gap-3 px-4 py-3.5 rounded-xl hover:border-primary/50 transition-all duration-300 hover:glow"
-              >
-                <span className="text-xl">{service.logo}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold text-foreground block truncate">{service.name}</span>
-                  <span className="text-[11px] text-muted-foreground">Search on {service.name}</span>
+        {/* Streaming Availability */}
+        {(streamProviders.length > 0 || rentBuyProviders.length > 0) && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mt-12 mb-16"
+          >
+            {streamProviders.length > 0 && (
+              <>
+                <h2 className="text-lg font-bold text-foreground mb-5">
+                  Streaming <span className="text-gradient">Now</span>
+                </h2>
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {streamProviders.map((p) => (
+                    <div
+                      key={p.provider_id}
+                      className="glass flex items-center gap-3 px-4 py-3 rounded-xl"
+                    >
+                      <img
+                        src={getImageUrl(p.logo_path, "w200") || ""}
+                        alt={p.provider_name}
+                        className="h-8 w-8 rounded-md object-cover"
+                      />
+                      <span className="text-sm font-semibold text-foreground">{p.provider_name}</span>
+                    </div>
+                  ))}
                 </div>
-                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-              </a>
-            ))}
-          </div>
-        </motion.section>
+              </>
+            )}
+            {rentBuyProviders.length > 0 && (
+              <>
+                <h2 className="text-lg font-bold text-foreground mb-5">
+                  Available to <span className="text-gradient">Rent / Buy</span>
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {rentBuyProviders.map((p) => (
+                    <div
+                      key={p.provider_id}
+                      className="glass flex items-center gap-3 px-4 py-3 rounded-xl"
+                    >
+                      <img
+                        src={getImageUrl(p.logo_path, "w200") || ""}
+                        alt={p.provider_name}
+                        className="h-8 w-8 rounded-md object-cover"
+                      />
+                      <span className="text-sm font-semibold text-foreground">{p.provider_name}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </motion.section>
+        )}
       </div>
     </div>
   );
