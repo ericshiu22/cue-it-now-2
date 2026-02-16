@@ -30,6 +30,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           className="flex flex-col items-center gap-3"
         >
           <img src={cueLogo} alt="Cue It" className="h-48 sm:h-64 w-auto" />
+          <p className="text-sm sm:text-base text-muted-foreground tracking-widest uppercase">Your Smart Streaming Assistant</p>
         </motion.div>
 
         <motion.p
@@ -38,7 +39,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-lg sm:text-xl text-muted-foreground max-w-lg mx-auto leading-relaxed"
         >
-          Find any movie or show and know exactly where to watch it.
+          Find any movie or show and know exactly where to stream it.
         </motion.p>
 
         {children}
