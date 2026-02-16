@@ -1,5 +1,5 @@
 import { Search, X } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SearchBarProps {
@@ -63,7 +63,7 @@ const SearchBar = ({ onSearch, isLoading }: SearchBarProps) => {
         <button
           type="submit"
           disabled={!query.trim() || isLoading}
-          className="mr-3 px-5 py-2 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          className="mr-3 px-5 py-2 rounded-xl bg-gradient-brand text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isLoading ? "Searching..." : "Search"}
         </button>

@@ -14,8 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Space Grotesk", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "monospace"],
+        sans: ["Outfit", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -56,6 +55,8 @@ export default {
           border: "hsl(var(--glass-border))",
         },
         glow: "hsl(var(--glow))",
+        "brand-purple": "hsl(var(--brand-purple))",
+        "brand-cyan": "hsl(var(--brand-cyan))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

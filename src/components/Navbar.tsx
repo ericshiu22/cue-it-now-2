@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ListVideo, LogOut, Search, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import cueLogo from "@/assets/cue-it-logo.png";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -9,8 +10,8 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 glass-strong border-b border-border/50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="text-lg font-bold text-foreground">
-          <span className="text-gradient">Cue It</span>
+        <Link to="/" className="flex items-center">
+          <img src={cueLogo} alt="Cue It" className="h-9 w-auto" />
         </Link>
 
         <div className="flex items-center gap-1">
@@ -52,7 +53,7 @@ const Navbar = () => {
           ) : (
             <Link
               to="/auth"
-              className="ml-2 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+              className="ml-2 px-4 py-1.5 rounded-lg bg-gradient-brand text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               <User className="h-4 w-4 inline mr-1.5 -mt-0.5" />
               Sign In
