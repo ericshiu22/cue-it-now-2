@@ -63,6 +63,55 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     logo: "⛰️",
     searchUrl: (title) => `https://www.paramountplus.com/search?q=${encodeURIComponent(title)}`,
   },
+  crunchyroll: {
+    id: "crunchyroll",
+    name: "Crunchyroll",
+    color: "hsl(25, 95%, 53%)",
+    logo: "🍥",
+    searchUrl: (title) => `https://www.crunchyroll.com/search?q=${encodeURIComponent(title)}`,
+  },
+  tubi: {
+    id: "tubi",
+    name: "Tubi",
+    color: "hsl(340, 80%, 55%)",
+    logo: "🟧",
+    searchUrl: (title) => `https://tubitv.com/search/${encodeURIComponent(title)}`,
+  },
+  pluto: {
+    id: "pluto",
+    name: "Pluto TV",
+    color: "hsl(210, 15%, 40%)",
+    logo: "📡",
+    searchUrl: (title) => `https://pluto.tv/search/details/${encodeURIComponent(title)}`,
+  },
+  discovery: {
+    id: "discovery",
+    name: "Discovery+",
+    color: "hsl(210, 80%, 45%)",
+    logo: "🌍",
+    searchUrl: (title) => `https://www.discoveryplus.com/search?q=${encodeURIComponent(title)}`,
+  },
+  starz: {
+    id: "starz",
+    name: "Starz",
+    color: "hsl(270, 50%, 40%)",
+    logo: "⭐",
+    searchUrl: (title) => `https://www.starz.com/search?q=${encodeURIComponent(title)}`,
+  },
+  showtime: {
+    id: "showtime",
+    name: "Showtime",
+    color: "hsl(0, 75%, 45%)",
+    logo: "🎭",
+    searchUrl: (title) => `https://www.sho.com/search?q=${encodeURIComponent(title)}`,
+  },
+  mubi: {
+    id: "mubi",
+    name: "MUBI",
+    color: "hsl(0, 0%, 15%)",
+    logo: "🎬",
+    searchUrl: (title) => `https://mubi.com/search?query=${encodeURIComponent(title)}`,
+  },
 };
 
 export const getService = (id: string): StreamingService | undefined => {
