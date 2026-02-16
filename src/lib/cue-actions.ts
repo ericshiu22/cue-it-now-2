@@ -9,6 +9,7 @@ interface CuePayload {
   vote_average?: number;
   release_year?: string;
   overview?: string;
+  service_provider?: string;
 }
 
 export const addCue = async (payload: CuePayload): Promise<boolean> => {
@@ -24,7 +25,7 @@ export const addCue = async (payload: CuePayload): Promise<boolean> => {
     title: payload.title,
     poster_path: payload.poster_path,
     media_type: payload.media_type,
-    service_provider: "unassigned",
+    service_provider: payload.service_provider || "unassigned",
     vote_average: payload.vote_average ?? null,
     release_year: payload.release_year ?? null,
     overview: payload.overview ?? null,
