@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ListVideo, LogOut, Search, User } from "lucide-react";
+import { ListVideo, LogOut, Search, User, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import cueLogo from "@/assets/cue-it-logo.png";
 
@@ -38,6 +38,20 @@ const Navbar = () => {
             >
               <ListVideo className="h-4 w-4 inline mr-1.5 -mt-0.5" />
               My Queue
+            </Link>
+          )}
+
+          {user && (
+            <Link
+              to="/linkup"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/linkup"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+              The Link Up
             </Link>
           )}
 

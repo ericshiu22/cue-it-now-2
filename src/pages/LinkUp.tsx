@@ -101,7 +101,7 @@ const LinkUp = () => {
       // But wait — we can use a simpler approach: create a DB function
       // that returns shared tmdb_ids between two users.
 
-      const { data: friendCues } = await supabase.rpc("get_shared_cues", {
+      const { data: friendCues } = await supabase.rpc("get_shared_cues" as any, {
         _user_id: user.id,
         _friend_id: selectedFriend.user_id,
       });
