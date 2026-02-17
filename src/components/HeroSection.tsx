@@ -20,7 +20,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-xs font-medium text-muted-foreground"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-brand-cyan animate-pulse-glow" />
-          Your Smart Streaming Assistant
+          End search fatigue
         </motion.div>
 
         <motion.div
@@ -39,7 +39,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-xl sm:text-2xl md:text-3xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
-          End search fatigue. Find any movie or show and know exactly where to stream it.
+          Find any movie or show and know exactly where to stream it.
         </motion.p>
 
         {children}
