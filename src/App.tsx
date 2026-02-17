@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import MyQueue from "./pages/MyQueue";
 import LinkUp from "./pages/LinkUp";
+import Friends from "./pages/Friends";
 import ShowDetail from "./pages/ShowDetail";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/queue" element={<MyQueue />} />
             <Route path="/linkup" element={<LinkUp />} />
+            <Route path="/friends" element={<Friends />} />
             <Route path="/show/:type/:id" element={<ShowDetail />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
