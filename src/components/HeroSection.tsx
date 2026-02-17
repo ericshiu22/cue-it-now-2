@@ -29,8 +29,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           transition={{ delay: 0.1, duration: 0.7 }}
           className="flex flex-col items-center gap-3"
         >
-          <img src={cueLogo} alt="Cue It" className="h-48 sm:h-64 w-auto" />
-          <p className="text-sm sm:text-base text-muted-foreground tracking-widest uppercase text-glow">Your Smart Streaming Assistant</p>
+          <img src={cueLogo} alt="Cue It - Your Smart Streaming Assistant" className="h-48 sm:h-64 w-auto" />
         </motion.div>
 
         <motion.p
