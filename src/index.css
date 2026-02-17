@@ -61,7 +61,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background: hsl(222 47% 8%);
+    background: radial-gradient(ellipse at center, hsl(222 47% 12%) 0%, hsl(222 47% 8%) 60%, hsl(222 50% 6%) 100%);
     min-height: 100vh;
   }
 }
