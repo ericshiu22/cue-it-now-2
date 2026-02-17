@@ -37,9 +37,8 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
   const mediaType = item.media_type === "tv" ? "TV" : "Movie";
 
   useEffect(() => {
-    const apiKey = localStorage.getItem("tmdb_key");
-    if (!apiKey || !item.id || !item.media_type) return;
-    getWatchProviders(item.media_type, item.id, apiKey).then((result) => {
+    if (!item.id || !item.media_type) return;
+    getWatchProviders(item.media_type, item.id).then((result) => {
       if (result) {
         const flatrate = [...(result.flatrate || []), ...(result.ads || [])];
         const unique = Array.from(new Map(flatrate.map((p) => [p.provider_id, p])).values());
