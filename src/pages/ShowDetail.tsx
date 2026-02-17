@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Calendar, Film, Tv, ExternalLink, Check } from "lucide-react";
-import { getImageUrl, getWatchProviders, getDetails, type WatchProvider } from "@/lib/tmdb";
+import { getImageUrl, getWatchProviders, type WatchProvider } from "@/lib/tmdb";
 import { addCue } from "@/lib/cue-actions";
 
-
+const TMDB_BASE = "https://api.themoviedb.org/3";
 
 interface ShowDetails {
   id: number;
@@ -33,13 +33,15 @@ const ShowDetail = () => {
   const [streamProviders, setStreamProviders] = useState<WatchProvider[]>([]);
   const [rentBuyProviders, setRentBuyProviders] = useState<WatchProvider[]>([]);
 
+  const apiKey = localStorage.getItem("tmdb_key") || "";
+
   useEffect(() => {
-    if (!type || !id) return;
+    if (!apiKey || !type || !id) return;
     const fetchDetails = async () => {
       setLoading(true);
       try {
-        const data = await getDetails(type, Number(id));
-        setShow(data);
+        const res = await fetch(`${TMDB_BASE}/${type}/${id}?api_key=${apiKey}`);
+        if (res.ok) setShow(await res.json());
       } catch {
         // silent
       }
@@ -49,7 +51,7 @@ const ShowDetail = () => {
 
     // Fetch watch providers
     if (type === "movie" || type === "tv") {
-      getWatchProviders(type as "movie" | "tv", Number(id)).then((result) => {
+      getWatchProviders(type as "movie" | "tv", Number(id), apiKey).then((result) => {
         if (result) {
           const flatrate = [...(result.flatrate || []), ...(result.ads || [])];
           const unique = Array.from(new Map(flatrate.map((p) => [p.provider_id, p])).values());
@@ -61,7 +63,7 @@ const ShowDetail = () => {
         }
       });
     }
-  }, [type, id]);
+  }, [apiKey, type, id]);
 
   if (loading) {
     return (

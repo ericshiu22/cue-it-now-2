@@ -3,41 +3,57 @@ import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
 import SearchBar from "@/components/SearchBar";
 import ResultsGrid from "@/components/ResultsGrid";
+import ApiKeyPrompt from "@/components/ApiKeyPrompt";
 import { searchMulti, getTrending } from "@/lib/tmdb";
 
 const Index = () => {
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("tmdb_key") || "");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleApiKey = (key: string) => {
+    localStorage.setItem("tmdb_key", key);
+    setApiKey(key);
+  };
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
   }, []);
 
   const { data: trendingData } = useQuery({
-    queryKey: ["trending"],
-    queryFn: () => getTrending(),
+    queryKey: ["trending", apiKey],
+    queryFn: () => getTrending(apiKey),
+    enabled: !!apiKey,
     staleTime: 1000 * 60 * 30,
   });
 
   const { data: searchData, isLoading: searchLoading } = useQuery({
-    queryKey: ["search", searchQuery],
-    queryFn: () => searchMulti(searchQuery),
-    enabled: !!searchQuery,
+    queryKey: ["search", searchQuery, apiKey],
+    queryFn: () => searchMulti(searchQuery, apiKey),
+    enabled: !!searchQuery && !!apiKey,
   });
 
   return (
     <div className="min-h-screen bg-background">
       <HeroSection>
-        <SearchBar onSearch={handleSearch} isLoading={searchLoading} />
+        {!apiKey ? (
+          <ApiKeyPrompt onSubmit={handleApiKey} />
+        ) : (
+          <SearchBar onSearch={handleSearch} isLoading={searchLoading} />
+        )}
       </HeroSection>
 
-      {searchData && (
-        <ResultsGrid
-          results={searchData.results}
-          title={`Results for "${searchQuery}"`}
-        />
-      )}
-      {!searchQuery && trendingData && (
-        <ResultsGrid results={trendingData.results} title="Trending This Week" />
+      {apiKey && (
+        <>
+          {searchData && (
+            <ResultsGrid
+              results={searchData.results}
+              title={`Results for "${searchQuery}"`}
+            />
+          )}
+          {!searchQuery && trendingData && (
+            <ResultsGrid results={trendingData.results} title="Trending This Week" />
+          )}
+        </>
       )}
     </div>
   );

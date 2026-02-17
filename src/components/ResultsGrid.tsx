@@ -8,7 +8,7 @@ interface ResultsGridProps {
 }
 
 const ResultsGrid = ({ results, title }: ResultsGridProps) => {
-  const filtered = (results || []).filter(
+  const filtered = results.filter(
     (r) => (r.media_type === "movie" || r.media_type === "tv") && r.poster_path
   );
 

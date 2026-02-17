@@ -1,6 +1,8 @@
-import { supabase } from "@/integrations/supabase/client";
-
+const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMAGE = "https://image.tmdb.org/t/p";
+
+// TMDB API key - this is a read-only public API key for movie data
+const API_KEY = ""; // Will be set by user
 
 export const getImageUrl = (path: string | null, size: "w200" | "w300" | "w500" | "w780" | "original" = "w500") => {
   if (!path) return null;
@@ -41,30 +43,34 @@ export interface TMDBSearchResponse {
   total_results: number;
 }
 
-const callTmdb = async (body: Record<string, unknown>) => {
-  const { data, error } = await supabase.functions.invoke("tmdb-search", { body });
-  if (error) throw new Error(error.message);
-  return data;
+export const searchMulti = async (query: string, apiKey: string): Promise<TMDBSearchResponse> => {
+  const res = await fetch(
+    `${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(query)}&include_adult=false`
+  );
+  if (!res.ok) throw new Error("TMDB search failed");
+  return res.json();
 };
 
-export const searchMulti = async (query: string): Promise<TMDBSearchResponse> => {
-  return callTmdb({ action: "search", query });
-};
-
-export const getTrending = async (): Promise<TMDBSearchResponse> => {
-  return callTmdb({ action: "trending" });
-};
-
-export const getDetails = async (mediaType: string, id: number) => {
-  return callTmdb({ action: "details", mediaType, id });
+export const getTrending = async (apiKey: string): Promise<TMDBSearchResponse> => {
+  const res = await fetch(
+    `${TMDB_BASE}/trending/all/week?api_key=${apiKey}`
+  );
+  if (!res.ok) throw new Error("TMDB trending failed");
+  return res.json();
 };
 
 export const getWatchProviders = async (
   mediaType: "movie" | "tv",
-  id: number
+  id: number,
+  apiKey: string
 ): Promise<WatchProvidersResult | null> => {
   try {
-    const data = await callTmdb({ action: "providers", mediaType, id });
+    const res = await fetch(
+      `${TMDB_BASE}/${mediaType}/${id}/watch/providers?api_key=${apiKey}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    // Use US providers by default
     return data.results?.US || null;
   } catch {
     return null;
