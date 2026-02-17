@@ -20,7 +20,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-xs font-medium text-muted-foreground"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-brand-cyan animate-pulse-glow" />
-          End search fatigue forever
+          End search fatigue
         </motion.div>
 
         <motion.div
