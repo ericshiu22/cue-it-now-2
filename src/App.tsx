@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import MyQueue from "./pages/MyQueue";
+import LinkUp from "./pages/LinkUp";
 import ShowDetail from "./pages/ShowDetail";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/queue" element={<MyQueue />} />
+            <Route path="/linkup" element={<LinkUp />} />
             <Route path="/show/:type/:id" element={<ShowDetail />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

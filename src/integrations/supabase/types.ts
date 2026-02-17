@@ -115,7 +115,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_shared_cues: {
+        Args: { _friend_id: string; _user_id: string }
+        Returns: {
+          deep_link: string
+          media_type: string
+          overview: string
+          poster_path: string
+          release_year: string
+          service_provider: string
+          title: string
+          tmdb_id: number
+          vote_average: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
