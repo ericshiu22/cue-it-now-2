@@ -30,7 +30,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           className="flex flex-col items-center gap-3"
         >
           <img src={cueLogo} alt="Cue It" className="h-48 sm:h-64 w-auto" />
-          <p className="text-sm sm:text-base text-muted-foreground tracking-widest uppercase">Your Smart Streaming Assistant</p>
+          <p className="text-sm sm:text-base text-muted-foreground tracking-widest uppercase text-glow">Your Smart Streaming Assistant</p>
         </motion.div>
 
         <motion.p
