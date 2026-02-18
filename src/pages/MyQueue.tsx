@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl } from "@/lib/tmdb";
 import { getService, getDeepLink, SERVICE_LIST } from "@/lib/streaming-services";
 import { toast } from "sonner";
+import SubscriptionHealth from "@/components/SubscriptionHealth";
 
 interface Cue {
   id: string;
@@ -150,6 +151,8 @@ const MyQueue = () => {
         </h1>
         <span className="text-sm text-muted-foreground">{cues.length} titles</span>
       </div>
+
+      <SubscriptionHealth />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (
