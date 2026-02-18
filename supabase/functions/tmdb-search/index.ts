@@ -38,6 +38,9 @@ serve(async (req) => {
       case "watch_providers":
         url = `${TMDB_BASE}/${media_type}/${id}/watch/providers?api_key=${apiKey}`;
         break;
+      case "recommendations":
+        url = `${TMDB_BASE}/${media_type}/${id}/recommendations?api_key=${apiKey}&page=1`;
+        break;
       default:
         return new Response(JSON.stringify({ error: "Invalid action" }), {
           status: 400,

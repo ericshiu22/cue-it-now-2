@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
 import SearchBar from "@/components/SearchBar";
 import ResultsGrid from "@/components/ResultsGrid";
+import RecommendedForYou from "@/components/RecommendedForYou";
 import { searchMulti, getTrending } from "@/lib/tmdb";
 
 const Index = () => {
@@ -36,8 +37,13 @@ const Index = () => {
           title={`Results for "${searchQuery}"`}
         />
       )}
-      {!searchQuery && trendingData && (
-        <ResultsGrid results={trendingData.results} title="Trending This Week" />
+      {!searchQuery && (
+        <>
+          <RecommendedForYou />
+          {trendingData && (
+            <ResultsGrid results={trendingData.results} title="Trending This Week" />
+          )}
+        </>
       )}
     </div>
   );
