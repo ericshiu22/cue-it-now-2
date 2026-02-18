@@ -59,6 +59,18 @@ export const getDetails = async (mediaType: string, id: number) => {
   return callTmdb({ action: "details", media_type: mediaType, id });
 };
 
+export const getRecommendations = async (
+  mediaType: "movie" | "tv",
+  id: number
+): Promise<TMDBResult[]> => {
+  try {
+    const data = await callTmdb({ action: "recommendations", media_type: mediaType, id });
+    return (data.results || []).map((r: TMDBResult) => ({ ...r, media_type: r.media_type || mediaType }));
+  } catch {
+    return [];
+  }
+};
+
 export const getWatchProviders = async (
   mediaType: "movie" | "tv",
   id: number
