@@ -12,6 +12,7 @@ import Friends from "./pages/Friends";
 import ShowDetail from "./pages/ShowDetail";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import SubscriptionHub from "./pages/SubscriptionHub";
 import EmailPreview from "./pages/EmailPreview";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/show/:type/:id" element={<ShowDetail />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/subscriptions" element={<SubscriptionHub />} />
             <Route path="/email-preview" element={<EmailPreview />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

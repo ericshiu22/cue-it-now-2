@@ -108,12 +108,11 @@ const SubscriptionHealth = () => {
 
   return (
     <>
-      <motion.section
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto px-4 py-6"
+        className="glass rounded-2xl p-6 h-full"
       >
-        <div className="glass rounded-2xl p-6">
           {/* Header */}
           <div className="flex items-center gap-3 mb-5">
             <div className="h-9 w-9 rounded-lg bg-gradient-brand flex items-center justify-center">
@@ -183,8 +182,7 @@ const SubscriptionHealth = () => {
               );
             })}
           </div>
-        </div>
-      </motion.section>
+      </motion.div>
 
       {/* Minimalist Report Modal */}
       <AnimatePresence>
