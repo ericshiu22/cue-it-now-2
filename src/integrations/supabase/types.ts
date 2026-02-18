@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          monthly_cost: number
+          service_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monthly_cost?: number
+          service_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monthly_cost?: number
+          service_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      churn_alerts_log: {
+        Row: {
+          id: string
+          sent_at: string
+          service_name: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          sent_at?: string
+          service_name: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          sent_at?: string
+          service_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cues: {
         Row: {
           created_at: string
@@ -24,6 +75,7 @@ export type Database = {
           poster_path: string | null
           release_year: string | null
           service_provider: string
+          status: string
           title: string
           tmdb_id: number
           user_id: string
@@ -38,6 +90,7 @@ export type Database = {
           poster_path?: string | null
           release_year?: string | null
           service_provider: string
+          status?: string
           title: string
           tmdb_id: number
           user_id: string
@@ -52,6 +105,7 @@ export type Database = {
           poster_path?: string | null
           release_year?: string | null
           service_provider?: string
+          status?: string
           title?: string
           tmdb_id?: number
           user_id?: string
