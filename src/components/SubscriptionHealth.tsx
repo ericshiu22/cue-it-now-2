@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, AlertTriangle, CheckCircle, XCircle, X } from "lucide-react";
@@ -67,7 +67,13 @@ function computeHealth(
   return { serviceName, serviceId, status, cueCount: serviceCues.length, monthlyCost, daysSinceActivity: daysSince };
 }
 
-const SubscriptionHealth = () => {
+export type { ServiceHealth, HealthStatus };
+
+interface SubscriptionHealthProps {
+  onHealthData?: (data: ServiceHealth[]) => void;
+}
+
+const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
   const { user } = useAuth();
   const [selectedService, setSelectedService] = useState<ServiceHealth | null>(null);
 
@@ -96,6 +102,11 @@ const SubscriptionHealth = () => {
     enabled: !!user,
     staleTime: 1000 * 60 * 5,
   });
+
+  // Expose health data to parent
+  useEffect(() => {
+    if (healthData && onHealthData) onHealthData(healthData);
+  }, [healthData, onHealthData]);
 
   if (!user || isLoading) return null;
   if (!healthData || healthData.length === 0) return null;

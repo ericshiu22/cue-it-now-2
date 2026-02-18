@@ -2,18 +2,20 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell, Zap, Shield, Mail, Smartphone, AlertTriangle,
-  Plus, Trash2, DollarSign, Tv, TrendingDown, ArrowRight, History, Wallet,
+  Plus, Trash2, DollarSign, Tv, TrendingDown, ArrowRight, History, Wallet, Rocket,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import MinimalistChurnEmail from "@/components/emails/MinimalistChurnEmail";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { SERVICE_LIST, getService } from "@/lib/streaming-services";
 import { getImageUrl } from "@/lib/tmdb";
 import { formatDistanceToNow } from "date-fns";
-import SubscriptionHealth from "@/components/SubscriptionHealth";
+import SubscriptionHealth, { type ServiceHealth } from "@/components/SubscriptionHealth";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 
 /* ── Constants ── */
 const ALERT_LEVELS = [
@@ -103,6 +105,10 @@ const SubscriptionHub = () => {
 
   /* ── Swap history state ── */
   const [swaps, setSwaps] = useState<SwapRecord[]>([]);
+
+  /* ── Health / Optimize state ── */
+  const [healthItems, setHealthItems] = useState<ServiceHealth[]>([]);
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
 
   /* ── Fetch all data ── */
   useEffect(() => {
@@ -225,10 +231,77 @@ const SubscriptionHub = () => {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 pb-16 space-y-6">
+        {/* ── Optimization Progress Bar ── */}
+        {healthItems.length > 0 && (() => {
+          const totalServices = healthItems.length;
+          const redCount = healthItems.filter((h) => h.status === "red").length;
+          const optimizedCount = totalServices - redCount;
+          const progressPercent = Math.round((optimizedCount / totalServices) * 100);
+          const isFullyOptimized = redCount === 0;
+          const mostUnderused = [...healthItems]
+            .filter((h) => h.status === "red")
+            .sort((a, b) => (a.cueCount - b.cueCount) || (b.monthlyCost - a.monthlyCost))[0];
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass rounded-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Rocket className="h-5 w-5 text-[hsl(var(--brand-cyan))]" />
+                  <h3 className="text-sm font-bold text-foreground">
+                    {isFullyOptimized ? "Fully Optimized! 🎉" : "Optimization Progress"}
+                  </h3>
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {optimizedCount}/{totalServices} services healthy
+                </span>
+              </div>
+
+              <div className="relative">
+                <Progress value={progressPercent} className="h-3 bg-muted" />
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                  style={{
+                    width: `${progressPercent}%`,
+                    background: isFullyOptimized
+                      ? "linear-gradient(90deg, hsl(145 70% 45%), hsl(160 80% 50%))"
+                      : "linear-gradient(90deg, hsl(var(--brand-cyan)), hsl(var(--brand-purple)))",
+                    boxShadow: isFullyOptimized
+                      ? "0 0 16px hsl(145 70% 45% / 0.5)"
+                      : "0 0 16px hsl(var(--brand-cyan) / 0.4)",
+                    height: "100%",
+                    borderRadius: "9999px",
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-xs text-muted-foreground">
+                  {isFullyOptimized
+                    ? "All your subscriptions are actively used. Nice work!"
+                    : `${redCount} service${redCount > 1 ? "s" : ""} with no activity in 30+ days`}
+                </p>
+
+                {!isFullyOptimized && mostUnderused && (
+                  <button
+                    onClick={() => setShowOptimizeModal(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[hsl(var(--brand-cyan))] to-[hsl(var(--brand-purple))] text-white hover:opacity-90 transition-opacity shadow-[0_0_20px_hsl(var(--brand-cyan)_/_0.3)]"
+                  >
+                    <Zap className="h-3.5 w-3.5" />
+                    One-Tap Optimize
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          );
+        })()}
         {/* ── Row 1: Subscription Health + Active Services ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Subscription Health */}
-          <SubscriptionHealth />
+          <SubscriptionHealth onHealthData={setHealthItems} />
 
           {/* Active Services Manager */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-5">
@@ -421,6 +494,52 @@ const SubscriptionHub = () => {
           </motion.section>
         </div>
       </main>
+
+      {/* One-Tap Optimize Modal */}
+      <AnimatePresence>
+        {showOptimizeModal && (() => {
+          const mostUnderused = [...healthItems]
+            .filter((h) => h.status === "red")
+            .sort((a, b) => (a.cueCount - b.cueCount) || (b.monthlyCost - a.monthlyCost))[0];
+          if (!mostUnderused) return null;
+          const serviceInfo = getService(mostUnderused.serviceId);
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowOptimizeModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25 }}
+                className="w-full max-w-[580px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sticky top-0 z-10 flex justify-end p-3">
+                  <button
+                    onClick={() => setShowOptimizeModal(false)}
+                    className="h-8 w-8 rounded-full bg-muted/80 backdrop-blur flex items-center justify-center hover:bg-muted transition-colors"
+                  >
+                    <span className="text-foreground text-sm">✕</span>
+                  </button>
+                </div>
+                <MinimalistChurnEmail
+                  serviceName={serviceInfo?.name || mostUnderused.serviceName}
+                  monthlyCost={`$${mostUnderused.monthlyCost.toFixed(2)}`}
+                  showsWatched={0}
+                  showsCued={mostUnderused.cueCount}
+                  pauseUrl="#"
+                  addShowUrl="/queue"
+                />
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
     </div>
   );
 };
