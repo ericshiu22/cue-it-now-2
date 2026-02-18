@@ -21,6 +21,14 @@ interface ServiceSwapModalProps {
   targetServiceId: string;
 }
 
+const CONFETTI_COLORS = [
+  "hsl(var(--brand-cyan))",
+  "hsl(var(--brand-purple))",
+  "hsl(180 80% 70%)",
+  "hsl(260 80% 75%)",
+  "hsl(200 90% 65%)",
+];
+
 const ServiceSwapModal = ({ open, onClose, show, targetProvider, targetServiceId }: ServiceSwapModalProps) => {
   const { user } = useAuth();
   const [underused, setUnderused] = useState<UnderusedSub | null>(null);
@@ -28,6 +36,7 @@ const ServiceSwapModal = ({ open, onClose, show, targetProvider, targetServiceId
   const [showChecklist, setShowChecklist] = useState(false);
   const [cued, setCued] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const title = show.title || show.name || "Unknown";
   const targetServiceInfo = getService(targetServiceId);
@@ -272,7 +281,13 @@ const ServiceSwapModal = ({ open, onClose, show, targetProvider, targetServiceId
                 )}
                 {showChecklist && (
                   <button
-                    onClick={() => setShowChecklist(false)}
+                    onClick={() => {
+                      setShowSuccess(true);
+                      setTimeout(() => {
+                        setShowSuccess(false);
+                        onClose();
+                      }, 2000);
+                    }}
                     className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-[hsl(var(--brand-cyan))] to-[hsl(var(--brand-purple))] text-white hover:opacity-90 transition-opacity shadow-[0_0_20px_hsl(var(--brand-cyan)_/_0.3)] flex items-center justify-center gap-2"
                   >
                     <CheckCircle2 className="h-4 w-4" />
@@ -295,6 +310,71 @@ const ServiceSwapModal = ({ open, onClose, show, targetProvider, targetServiceId
                   )}
                 </button>
               </div>
+
+              {/* Success celebration overlay */}
+              <AnimatePresence>
+                {showSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-background/90 backdrop-blur-sm"
+                  >
+                    {/* Confetti particles */}
+                    {Array.from({ length: 20 }).map((_, i) => {
+                      const angle = (i / 20) * 360;
+                      const rad = (angle * Math.PI) / 180;
+                      const dist = 60 + Math.random() * 80;
+                      return (
+                        <motion.div
+                          key={i}
+                          initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                          animate={{
+                            x: Math.cos(rad) * dist,
+                            y: Math.sin(rad) * dist - 20,
+                            opacity: 0,
+                            scale: 0.5,
+                          }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="absolute h-2 w-2 rounded-full"
+                          style={{ backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length] }}
+                        />
+                      );
+                    })}
+
+                    {/* Success checkmark */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", damping: 12, stiffness: 200, delay: 0.1 }}
+                      className="h-20 w-20 rounded-full bg-gradient-to-br from-[hsl(var(--brand-cyan))] to-[hsl(var(--brand-purple))] flex items-center justify-center shadow-[0_0_40px_hsl(var(--brand-cyan)_/_0.4)]"
+                    >
+                      <motion.div
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                      >
+                        <CheckCircle2 className="h-10 w-10 text-white" />
+                      </motion.div>
+                    </motion.div>
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="mt-4 text-lg font-bold text-foreground"
+                    >
+                      You're all set!
+                    </motion.p>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      className="text-sm text-muted-foreground"
+                    >
+                      Happy streaming 🎬
+                    </motion.p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </motion.div>
