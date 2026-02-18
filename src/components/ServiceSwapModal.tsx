@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowRightLeft, CheckCircle2, ExternalLink, Sparkles } from "lucide-react";
+import { X, ArrowRightLeft, CheckCircle2, ExternalLink, Sparkles, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
@@ -191,21 +191,69 @@ const ServiceSwapModal = ({ open, onClose, show, targetProvider, targetServiceId
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden mb-5"
                   >
-                    <div className="p-4 rounded-xl bg-[hsl(var(--brand-cyan)_/_0.05)] ring-1 ring-[hsl(var(--brand-cyan)_/_0.15)] space-y-3">
-                      <h4 className="text-sm font-bold text-foreground">Swap Checklist</h4>
-                      {[
-                        `Go to your ${underusedDisplayName} account settings`,
-                        `Cancel or pause your ${underusedDisplayName} subscription`,
-                        `Sign up for ${targetDisplayName}`,
-                        `Search for "${title}" and start watching!`,
-                      ].map((step, i) => (
-                        <div key={i} className="flex items-start gap-2.5">
-                          <div className="mt-0.5 h-5 w-5 rounded-full bg-[hsl(var(--brand-cyan)_/_0.15)] flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-bold text-[hsl(var(--brand-cyan))]">{i + 1}</span>
+                    <div className="p-4 rounded-xl bg-[hsl(var(--brand-cyan)_/_0.05)] ring-1 ring-[hsl(var(--brand-cyan)_/_0.15)] space-y-4">
+                      <h4 className="text-sm font-bold text-foreground">Swap in 3 Steps</h4>
+
+                      {/* Step 1 */}
+                      <div className="flex items-start gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="h-6 w-6 rounded-full bg-[hsl(var(--brand-cyan)_/_0.15)] flex items-center justify-center shrink-0 ring-1 ring-[hsl(var(--brand-cyan)_/_0.3)]">
+                            <span className="text-[10px] font-bold text-[hsl(var(--brand-cyan))]">1</span>
                           </div>
-                          <span className="text-sm text-muted-foreground">{step}</span>
+                          <div className="w-px h-full min-h-[16px] bg-[hsl(var(--brand-cyan)_/_0.2)]" />
                         </div>
-                      ))}
+                        <div>
+                          <span className="text-sm text-muted-foreground">Cancel your underused service</span>
+                          <a
+                            href={underusedInfo?.searchUrl("account") || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--brand-cyan))] hover:underline"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Go to {underusedDisplayName}
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div className="flex items-start gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="h-6 w-6 rounded-full bg-[hsl(var(--brand-cyan)_/_0.15)] flex items-center justify-center shrink-0 ring-1 ring-[hsl(var(--brand-cyan)_/_0.3)]">
+                            <span className="text-[10px] font-bold text-[hsl(var(--brand-cyan))]">2</span>
+                          </div>
+                          <div className="w-px h-full min-h-[16px] bg-[hsl(var(--brand-cyan)_/_0.2)]" />
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Sign up for the new service</span>
+                          <a
+                            href={targetServiceInfo?.searchUrl(title) || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--brand-cyan))] hover:underline"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Go to {targetDisplayName}
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div className="flex items-start gap-3">
+                        <div className="h-6 w-6 rounded-full bg-[hsl(var(--brand-cyan)_/_0.15)] flex items-center justify-center shrink-0 ring-1 ring-[hsl(var(--brand-cyan)_/_0.3)]">
+                          <span className="text-[10px] font-bold text-[hsl(var(--brand-cyan))]">3</span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Update your subscriptions here</span>
+                          <button
+                            onClick={() => { onClose(); window.location.href = "/profile"; }}
+                            className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--brand-cyan))] hover:underline"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                            Refresh My Subscriptions
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 )}
