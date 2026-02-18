@@ -140,19 +140,31 @@ const Profile = () => {
 
               {/* Glowing slider track */}
               <div className="space-y-4">
-                <div className="relative h-3 rounded-full overflow-hidden bg-muted">
-                  {/* Filled track with cyan→purple gradient */}
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out"
-                    style={{
-                      width: `${sliderPercent + 10}%`,
-                      background: `linear-gradient(90deg, hsl(var(--brand-cyan)), hsl(var(--brand-purple)))`,
-                      boxShadow: `0 0 16px hsl(var(--brand-cyan) / 0.4), 0 0 40px hsl(var(--brand-purple) / 0.2)`,
-                    }}
-                  />
+                <div
+                  className="relative h-8 flex items-center cursor-pointer"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percent = x / rect.width;
+                    const idx = Math.round(percent * (ALERT_LEVELS.length - 1));
+                    const clamped = Math.max(0, Math.min(ALERT_LEVELS.length - 1, idx));
+                    handleAlertLevel(ALERT_LEVELS[clamped].id);
+                  }}
+                >
+                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden bg-muted">
+                    {/* Filled track with cyan→purple gradient */}
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${sliderPercent + 10}%`,
+                        background: `linear-gradient(90deg, hsl(var(--brand-cyan)), hsl(var(--brand-purple)))`,
+                        boxShadow: `0 0 16px hsl(var(--brand-cyan) / 0.4), 0 0 40px hsl(var(--brand-purple) / 0.2)`,
+                      }}
+                    />
+                  </div>
                   {/* Thumb */}
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border-2 border-foreground bg-background transition-all duration-500 ease-out"
+                    className="absolute top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border-2 border-foreground bg-background transition-all duration-500 ease-out pointer-events-none"
                     style={{
                       left: `calc(${sliderPercent}% - 12px + ${currentIdx === 0 ? 12 : currentIdx === 2 ? -12 : 0}px)`,
                       boxShadow: `0 0 12px hsl(var(--brand-cyan) / 0.5), 0 0 30px hsl(var(--brand-purple) / 0.3)`,
