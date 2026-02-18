@@ -201,7 +201,111 @@ const SubscriptionHub = () => {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 pb-16 space-y-6">
-        {/* ── Row 1: Subscription Health + Active Services ── */}
+        {/* ── Combined Savings + Optimization Banner ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-2xl p-6 md:p-8 relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-brand opacity-[0.06]" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            {/* Optimization Circle */}
+            {healthItems.length > 0 && (() => {
+              const totalServices = healthItems.length;
+              const redCount = healthItems.filter((h) => h.status === "red").length;
+              const optimizedCount = totalServices - redCount;
+              const progressPercent = Math.round((optimizedCount / totalServices) * 100);
+              const isFullyOptimized = redCount === 0;
+              const radius = 52;
+              const circumference = 2 * Math.PI * radius;
+              const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
+              return (
+                <div className="relative flex-shrink-0">
+                  <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-90">
+                    <circle cx="70" cy="70" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="10" />
+                    <circle
+                      cx="70" cy="70" r={radius} fill="none"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      stroke={isFullyOptimized ? "hsl(145 70% 45%)" : "url(#progressGradient)"}
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      className="transition-all duration-1000 ease-out"
+                      style={{
+                        filter: isFullyOptimized
+                          ? "drop-shadow(0 0 8px hsl(145 70% 45% / 0.6))"
+                          : "drop-shadow(0 0 8px hsl(var(--brand-cyan) / 0.5))",
+                      }}
+                    />
+                    <defs>
+                      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="hsl(var(--brand-cyan))" />
+                        <stop offset="100%" stopColor="hsl(var(--brand-purple))" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center rotate-0">
+                    <span className="text-2xl font-black text-foreground">{progressPercent}%</span>
+                    <span className="text-[10px] font-medium text-muted-foreground">{optimizedCount}/{totalServices} healthy</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Savings Info */}
+            <div className="flex-1 text-center md:text-left">
+              <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Total Potential Savings</p>
+              <h2
+                className="text-4xl md:text-5xl font-black text-gradient"
+                style={{ textShadow: "0 0 40px hsl(var(--brand-cyan) / 0.4), 0 0 80px hsl(var(--brand-purple) / 0.2)" }}
+              >
+                ${totalYearlySavings.toFixed(2)}
+                <span className="text-xl text-muted-foreground font-semibold">/yr</span>
+              </h2>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-2">
+                <span className="text-sm text-muted-foreground">
+                  Spending <span className="text-foreground font-semibold">${totalMonthly.toFixed(2)}/mo</span>
+                </span>
+                {totalSwapSavings > 0 && (
+                  <span className="flex items-center gap-1 text-sm font-semibold text-[hsl(var(--brand-cyan))]">
+                    <TrendingDown className="h-4 w-4" />
+                    ${totalSwapSavings.toFixed(2)}/mo saved
+                  </span>
+                )}
+              </div>
+              {/* Status + Optimize button */}
+              {healthItems.length > 0 && (() => {
+                const redCount = healthItems.filter((h) => h.status === "red").length;
+                const isFullyOptimized = redCount === 0;
+                const mostUnderused = [...healthItems]
+                  .filter((h) => h.status === "red")
+                  .sort((a, b) => (a.cueCount - b.cueCount) || (b.monthlyCost - a.monthlyCost))[0];
+
+                return (
+                  <div className="flex flex-wrap items-center gap-3 mt-3">
+                    <p className="text-xs text-muted-foreground">
+                      {isFullyOptimized
+                        ? "All subscriptions actively used 🎉"
+                        : `${redCount} service${redCount > 1 ? "s" : ""} idle 30+ days`}
+                    </p>
+                    {!isFullyOptimized && mostUnderused && (
+                      <button
+                        onClick={() => setShowOptimizeModal(true)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[hsl(var(--brand-cyan))] to-[hsl(var(--brand-purple))] text-white hover:opacity-90 transition-opacity shadow-[0_0_20px_hsl(var(--brand-cyan)_/_0.3)]"
+                      >
+                        <Zap className="h-3.5 w-3.5" />
+                        One-Tap Optimize
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Subscription Health + Active Services ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Subscription Health */}
           <SubscriptionHealth onHealthData={setHealthItems} />
@@ -280,101 +384,7 @@ const SubscriptionHub = () => {
           </motion.div>
         </div>
 
-        {/* ── Total Potential Savings ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-2xl p-8 text-center relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-brand opacity-[0.06]" />
-          <p className="text-sm font-medium text-muted-foreground mb-2 relative z-10">Total Potential Savings</p>
-          <h2
-            className="text-5xl md:text-6xl font-black text-gradient relative z-10"
-            style={{ textShadow: "0 0 40px hsl(var(--brand-cyan) / 0.4), 0 0 80px hsl(var(--brand-purple) / 0.2)" }}
-          >
-            ${totalYearlySavings.toFixed(2)}
-            <span className="text-2xl text-muted-foreground font-semibold">/yr</span>
-          </h2>
-          <div className="flex items-center justify-center gap-4 mt-3 relative z-10">
-            <span className="text-sm text-muted-foreground">
-              Spending <span className="text-foreground font-semibold">${totalMonthly.toFixed(2)}/mo</span>
-            </span>
-            {totalSwapSavings > 0 && (
-              <span className="flex items-center gap-1 text-sm font-semibold text-[hsl(var(--brand-cyan))]">
-                <TrendingDown className="h-4 w-4" />
-                ${totalSwapSavings.toFixed(2)}/mo saved via swaps
-              </span>
-            )}
-          </div>
-        </motion.div>
-
-        {/* ── Optimization Progress Bar ── */}
-        {healthItems.length > 0 && (() => {
-          const totalServices = healthItems.length;
-          const redCount = healthItems.filter((h) => h.status === "red").length;
-          const optimizedCount = totalServices - redCount;
-          const progressPercent = Math.round((optimizedCount / totalServices) * 100);
-          const isFullyOptimized = redCount === 0;
-          const mostUnderused = [...healthItems]
-            .filter((h) => h.status === "red")
-            .sort((a, b) => (a.cueCount - b.cueCount) || (b.monthlyCost - a.monthlyCost))[0];
-
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass rounded-2xl p-6"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Rocket className="h-5 w-5 text-[hsl(var(--brand-cyan))]" />
-                  <h3 className="text-sm font-bold text-foreground">
-                    {isFullyOptimized ? "Fully Optimized! 🎉" : "Optimization Progress"}
-                  </h3>
-                </div>
-                <span className="text-xs font-semibold text-muted-foreground">
-                  {optimizedCount}/{totalServices} services healthy
-                </span>
-              </div>
-
-              <div className="relative">
-                <Progress value={progressPercent} className="h-3 bg-muted" />
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                  style={{
-                    width: `${progressPercent}%`,
-                    background: isFullyOptimized
-                      ? "linear-gradient(90deg, hsl(145 70% 45%), hsl(160 80% 50%))"
-                      : "linear-gradient(90deg, hsl(var(--brand-cyan)), hsl(var(--brand-purple)))",
-                    boxShadow: isFullyOptimized
-                      ? "0 0 16px hsl(145 70% 45% / 0.5)"
-                      : "0 0 16px hsl(var(--brand-cyan) / 0.4)",
-                    height: "100%",
-                    borderRadius: "9999px",
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between mt-3">
-                <p className="text-xs text-muted-foreground">
-                  {isFullyOptimized
-                    ? "All your subscriptions are actively used. Nice work!"
-                    : `${redCount} service${redCount > 1 ? "s" : ""} with no activity in 30+ days`}
-                </p>
-
-                {!isFullyOptimized && mostUnderused && (
-                  <button
-                    onClick={() => setShowOptimizeModal(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[hsl(var(--brand-cyan))] to-[hsl(var(--brand-purple))] text-white hover:opacity-90 transition-opacity shadow-[0_0_20px_hsl(var(--brand-cyan)_/_0.3)]"
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    One-Tap Optimize
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          );
-        })()}
+        {/* (Savings + Optimization moved to banner above) */}
 
         {/* ── Row 2: Recently Swapped (Service Swap History) ── */}
         {swaps.length > 0 && (
