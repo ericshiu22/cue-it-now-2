@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
 import SearchBar from "@/components/SearchBar";
 import ResultsGrid from "@/components/ResultsGrid";
+import SubscriptionHealth from "@/components/SubscriptionHealth";
 import { searchMulti, getTrending } from "@/lib/tmdb";
 
 const Index = () => {
@@ -29,6 +30,8 @@ const Index = () => {
       <HeroSection>
         <SearchBar onSearch={handleSearch} isLoading={searchLoading} />
       </HeroSection>
+
+      <SubscriptionHealth />
 
       {searchData && (
         <ResultsGrid
