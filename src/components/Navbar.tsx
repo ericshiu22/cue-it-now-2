@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ListVideo, LogOut, Search, Settings, User, UserPlus, Users } from "lucide-react";
+import { ListVideo, LogOut, Search, Settings, User, UserPlus, Users, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import cueLogo from "@/assets/cue-it-logo.png";
 
@@ -66,6 +66,20 @@ const Navbar = () => {
             >
               <UserPlus className="h-4 w-4 inline mr-1.5 -mt-0.5" />
               Friends
+            </Link>
+          )}
+
+          {user && (
+            <Link
+              to="/subscriptions"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/subscriptions"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Wallet className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+              Sub Hub
             </Link>
           )}
 
