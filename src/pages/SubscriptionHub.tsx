@@ -1,14 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bell, Zap, Shield, Mail, Smartphone, AlertTriangle,
+  Zap,
   Plus, Trash2, DollarSign, Tv, TrendingDown, ArrowRight, History, Wallet, Rocket,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import MinimalistChurnEmail from "@/components/emails/MinimalistChurnEmail";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { SERVICE_LIST, getService } from "@/lib/streaming-services";
 import { getImageUrl } from "@/lib/tmdb";
@@ -16,30 +15,6 @@ import { formatDistanceToNow } from "date-fns";
 import SubscriptionHealth, { type ServiceHealth } from "@/components/SubscriptionHealth";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-
-/* ── Constants ── */
-const ALERT_LEVELS = [
-  {
-    id: "minimalist",
-    label: "Minimalist",
-    icon: Shield,
-    description: "We only nudge you to save money. You'll get one weekly digest and critical price‑drop alerts—nothing more.",
-  },
-  {
-    id: "balanced",
-    label: "Balanced",
-    icon: Zap,
-    description: "A healthy mix. You'll receive price alerts, new‑release pings for queued titles, and a weekly roundup.",
-  },
-  {
-    id: "command_center",
-    label: "Command Center",
-    icon: Bell,
-    description: "Full visibility. Real‑time price changes, friend activity, trending titles, and daily digests—you'll never miss a thing.",
-  },
-] as const;
-
-type AlertLevel = (typeof ALERT_LEVELS)[number]["id"];
 
 interface ActiveSub {
   id: string;
@@ -58,42 +33,10 @@ interface SwapRecord {
   created_at: string;
 }
 
-/* ── Toggle Row ── */
-const ToggleRow = ({
-  icon: Icon,
-  label,
-  description,
-  checked,
-  onChange,
-}: {
-  icon: React.ElementType;
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) => (
-  <div className="flex items-center justify-between gap-4">
-    <div className="flex items-center gap-3">
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </div>
-    </div>
-    <Switch checked={checked} onCheckedChange={onChange} />
-  </div>
-);
-
 const SubscriptionHub = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  /* ── Alert / Notification state ── */
-  const [alertLevel, setAlertLevel] = useState<AlertLevel>("balanced");
-  const [emailEnabled, setEmailEnabled] = useState(true);
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [churnAlertsEnabled, setChurnAlertsEnabled] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
 
   /* ── Subscription state ── */
@@ -115,37 +58,17 @@ const SubscriptionHub = () => {
     if (!user) return;
 
     const fetchAll = async () => {
-      const [profileRes, subsRes, swapsRes] = await Promise.all([
-        supabase.from("profiles").select("alert_level, email_enabled, push_enabled, churn_alerts_enabled").eq("user_id", user.id).single() as any,
+      const [subsRes, swapsRes] = await Promise.all([
         supabase.from("active_subscriptions").select("*").order("created_at", { ascending: true }) as any,
         supabase.from("service_swaps").select("id, old_service, new_service, show_title, show_poster_path, monthly_savings, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10) as any,
       ]);
 
-      if (!profileRes.error && profileRes.data) {
-        setAlertLevel(profileRes.data.alert_level || "balanced");
-        setEmailEnabled(profileRes.data.email_enabled ?? true);
-        setPushEnabled(profileRes.data.push_enabled ?? true);
-        setChurnAlertsEnabled(profileRes.data.churn_alerts_enabled ?? true);
-      }
       if (subsRes.data) setSubs(subsRes.data);
       if (swapsRes.data) setSwaps(swapsRes.data);
       setProfileLoading(false);
     };
     fetchAll();
   }, [user]);
-
-  /* ── DB helpers ── */
-  const syncToDb = useCallback(async (patch: Record<string, unknown>) => {
-    if (!user) return;
-    setSaving(true);
-    const { error } = await (supabase.from("profiles").update(patch).eq("user_id", user.id) as any);
-    setSaving(false);
-    if (error) toast.error("Failed to save preference.");
-    else toast.success("Preference saved.");
-  }, [user]);
-
-  const handleAlertLevel = (level: AlertLevel) => { setAlertLevel(level); syncToDb({ alert_level: level }); };
-  const handleToggle = (key: string, value: boolean, setter: (v: boolean) => void) => { setter(value); syncToDb({ [key]: value }); };
 
   const addSubscription = async () => {
     if (!user || !newService) return;
@@ -177,10 +100,6 @@ const SubscriptionHub = () => {
   const totalSwapSavings = swaps.reduce((sum, s) => sum + Number(s.monthly_savings), 0);
   const totalYearlySavings = totalSwapSavings * 12;
 
-  const currentIdx = ALERT_LEVELS.findIndex((l) => l.id === alertLevel);
-  const currentLevel = ALERT_LEVELS[currentIdx] || ALERT_LEVELS[1];
-  const CurrentIcon = currentLevel.icon;
-  const sliderPercent = (currentIdx / (ALERT_LEVELS.length - 1)) * 100;
 
   if (profileLoading) {
     return (
@@ -449,59 +368,6 @@ const SubscriptionHub = () => {
           </motion.div>
         )}
 
-        {/* ── Row 3: Churn Alerts Settings ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Alert Level */}
-          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-2xl p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-brand">
-                <Bell className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-foreground">Alert Intensity</h2>
-                <p className="text-xs text-muted-foreground">How much we bother you.</p>
-              </div>
-              {saving && <span className="ml-auto text-xs text-muted-foreground animate-pulse">Saving…</span>}
-            </div>
-
-            <div className="space-y-4">
-              <div
-                className="relative h-8 flex items-center cursor-pointer"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const percent = (e.clientX - rect.left) / rect.width;
-                  const idx = Math.max(0, Math.min(ALERT_LEVELS.length - 1, Math.round(percent * (ALERT_LEVELS.length - 1))));
-                  handleAlertLevel(ALERT_LEVELS[idx].id);
-                }}
-              >
-                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden bg-muted">
-                  <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out" style={{ width: `${sliderPercent + 10}%`, background: `linear-gradient(90deg, hsl(var(--brand-cyan)), hsl(var(--brand-purple)))`, boxShadow: `0 0 16px hsl(var(--brand-cyan) / 0.4), 0 0 40px hsl(var(--brand-purple) / 0.2)` }} />
-                </div>
-                <div className="absolute top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border-2 border-foreground bg-background transition-all duration-500 ease-out pointer-events-none" style={{ left: `calc(${sliderPercent}% - 12px + ${currentIdx === 0 ? 12 : currentIdx === 2 ? -12 : 0}px)`, boxShadow: `0 0 12px hsl(var(--brand-cyan) / 0.5), 0 0 30px hsl(var(--brand-purple) / 0.3)` }} />
-              </div>
-              <div className="flex justify-between">
-                {ALERT_LEVELS.map((level) => (
-                  <button key={level.id} onClick={() => handleAlertLevel(level.id)} className={`text-xs font-medium transition-colors px-2 py-1 rounded-lg ${alertLevel === level.id ? "text-foreground bg-secondary" : "text-muted-foreground hover:text-foreground"}`}>
-                    {level.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <motion.div key={alertLevel} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex items-start gap-3 p-4 rounded-xl bg-secondary/50 border border-border">
-              <CurrentIcon className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-foreground/80 leading-relaxed">{currentLevel.description}</p>
-            </motion.div>
-          </motion.section>
-
-          {/* Channel Toggles */}
-          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass rounded-2xl p-6 space-y-5">
-            <h2 className="text-base font-bold text-foreground">Notification Channels</h2>
-            <ToggleRow icon={Mail} label="Email Notifications" description="Weekly digests and alerts to your inbox." checked={emailEnabled} onChange={(v) => handleToggle("email_enabled", v, setEmailEnabled)} />
-            <ToggleRow icon={Smartphone} label="Push Notifications" description="Real‑time pings on your device." checked={pushEnabled} onChange={(v) => handleToggle("push_enabled", v, setPushEnabled)} />
-            <ToggleRow icon={AlertTriangle} label="Churn Alerts" description="Heads‑up before titles leave your services." checked={churnAlertsEnabled} onChange={(v) => handleToggle("churn_alerts_enabled", v, setChurnAlertsEnabled)} />
-          </motion.section>
-        </div>
       </main>
 
       {/* One-Tap Optimize Modal */}
