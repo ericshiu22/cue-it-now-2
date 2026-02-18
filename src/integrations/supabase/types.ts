@@ -85,25 +85,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          alert_level: string
           avatar_url: string | null
+          churn_alerts_enabled: boolean
           created_at: string
+          email_enabled: boolean
           id: string
+          push_enabled: boolean
           updated_at: string
           user_id: string
           username: string | null
         }
         Insert: {
+          alert_level?: string
           avatar_url?: string | null
+          churn_alerts_enabled?: boolean
           created_at?: string
+          email_enabled?: boolean
           id?: string
+          push_enabled?: boolean
           updated_at?: string
           user_id: string
           username?: string | null
         }
         Update: {
+          alert_level?: string
           avatar_url?: string | null
+          churn_alerts_enabled?: boolean
           created_at?: string
+          email_enabled?: boolean
           id?: string
+          push_enabled?: boolean
           updated_at?: string
           user_id?: string
           username?: string | null
