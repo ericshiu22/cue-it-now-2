@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ListVideo, LogOut, Search, User, UserPlus, Users } from "lucide-react";
+import { ListVideo, LogOut, Search, Settings, User, UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import cueLogo from "@/assets/cue-it-logo.png";
 
@@ -70,14 +70,27 @@ const Navbar = () => {
           )}
 
           {user ? (
-            <button
-              onClick={() => signOut()}
-              className="ml-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
-              title={user.email}
-            >
-              <LogOut className="h-4 w-4 inline mr-1.5 -mt-0.5" />
-              Sign Out
-            </button>
+            <>
+              <Link
+                to="/profile"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  location.pathname === "/profile"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Settings className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+                Settings
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="ml-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
+                title={user.email}
+              >
+                <LogOut className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+                Sign Out
+              </button>
+            </>
           ) : (
             <Link
               to="/auth"
