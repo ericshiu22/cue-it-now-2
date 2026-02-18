@@ -4,6 +4,7 @@ export interface StreamingService {
   color: string;
   logo: string;
   searchUrl: (title: string) => string;
+  cancelUrl: string;
 }
 
 export const STREAMING_SERVICES: Record<string, StreamingService> = {
@@ -13,6 +14,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(0, 75%, 50%)",
     logo: "🔴",
     searchUrl: (title) => `https://www.netflix.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.netflix.com/cancelplan",
   },
   max: {
     id: "max",
@@ -20,6 +22,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(240, 60%, 55%)",
     logo: "🟣",
     searchUrl: (title) => `https://play.max.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.max.com/account",
   },
   "disney+": {
     id: "disney+",
@@ -27,6 +30,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(220, 80%, 55%)",
     logo: "🔵",
     searchUrl: (title) => `https://www.disneyplus.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.disneyplus.com/account",
   },
   hulu: {
     id: "hulu",
@@ -34,6 +38,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(145, 70%, 45%)",
     logo: "🟢",
     searchUrl: (title) => `https://www.hulu.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://secure.hulu.com/account",
   },
   "prime video": {
     id: "prime video",
@@ -41,6 +46,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(195, 80%, 50%)",
     logo: "🟦",
     searchUrl: (title) => `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=instant-video`,
+    cancelUrl: "https://www.amazon.com/gp/video/settings",
   },
   "apple tv+": {
     id: "apple tv+",
@@ -48,6 +54,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(0, 0%, 70%)",
     logo: "⚪",
     searchUrl: (title) => `https://tv.apple.com/search?term=${encodeURIComponent(title)}`,
+    cancelUrl: "https://support.apple.com/en-us/HT202039",
   },
   peacock: {
     id: "peacock",
@@ -55,6 +62,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(35, 90%, 55%)",
     logo: "🟡",
     searchUrl: (title) => `https://www.peacocktv.com/search?query=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.peacocktv.com/account/subscription",
   },
   paramount: {
     id: "paramount",
@@ -62,6 +70,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(215, 70%, 50%)",
     logo: "⛰️",
     searchUrl: (title) => `https://www.paramountplus.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.paramountplus.com/account/",
   },
   crunchyroll: {
     id: "crunchyroll",
@@ -69,6 +78,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(25, 95%, 53%)",
     logo: "🍥",
     searchUrl: (title) => `https://www.crunchyroll.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.crunchyroll.com/account/subscription",
   },
   tubi: {
     id: "tubi",
@@ -76,6 +86,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(340, 80%, 55%)",
     logo: "🟧",
     searchUrl: (title) => `https://tubitv.com/search/${encodeURIComponent(title)}`,
+    cancelUrl: "https://tubitv.com/account",
   },
   pluto: {
     id: "pluto",
@@ -83,6 +94,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(210, 15%, 40%)",
     logo: "📡",
     searchUrl: (title) => `https://pluto.tv/search/details/${encodeURIComponent(title)}`,
+    cancelUrl: "https://pluto.tv/account",
   },
   discovery: {
     id: "discovery",
@@ -90,6 +102,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(210, 80%, 45%)",
     logo: "🌍",
     searchUrl: (title) => `https://www.discoveryplus.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.discoveryplus.com/account",
   },
   starz: {
     id: "starz",
@@ -97,6 +110,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(270, 50%, 40%)",
     logo: "⭐",
     searchUrl: (title) => `https://www.starz.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.starz.com/account",
   },
   showtime: {
     id: "showtime",
@@ -104,6 +118,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(0, 75%, 45%)",
     logo: "🎭",
     searchUrl: (title) => `https://www.sho.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.sho.com/account",
   },
   mubi: {
     id: "mubi",
@@ -111,6 +126,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     color: "hsl(0, 0%, 15%)",
     logo: "🎬",
     searchUrl: (title) => `https://mubi.com/search?query=${encodeURIComponent(title)}`,
+    cancelUrl: "https://mubi.com/account",
   },
 };
 
