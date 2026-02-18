@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, AlertTriangle, CheckCircle, XCircle, X } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle, XCircle, X, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getService } from "@/lib/streaming-services";
 import { useAuth } from "@/contexts/AuthContext";
@@ -145,17 +145,17 @@ const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
               const displayService = getService(service.serviceId);
 
               return (
-                <motion.button
+                <motion.div
                   key={service.serviceId}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  onClick={() => service.status === "red" && setSelectedService(service)}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
                     service.status === "red"
                       ? "cursor-pointer hover:border-red-500/60 hover:bg-red-500/10"
                       : "cursor-default"
                   } ${config.bgClass}`}
+                  onClick={() => service.status === "red" && setSelectedService(service)}
                 >
                   {/* Service logo */}
                   <span className="text-xl flex-shrink-0">
@@ -171,6 +171,20 @@ const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
                       {service.cueCount} cued · {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d ago` : "never"}
                     </div>
                   </div>
+
+                  {/* Cancel button for red services */}
+                  {service.status === "red" && displayService?.cancelUrl && (
+                    <a
+                      href={displayService.cancelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-destructive/15 text-destructive hover:bg-destructive/25 transition-colors ring-1 ring-destructive/30 shrink-0"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Cancel
+                    </a>
+                  )}
 
                   {/* Health bar */}
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -189,7 +203,7 @@ const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
                       style={{ color: config.color }}
                     />
                   </div>
-                </motion.button>
+                </motion.div>
               );
             })}
           </div>
