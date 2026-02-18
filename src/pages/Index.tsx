@@ -5,6 +5,7 @@ import SearchBar from "@/components/SearchBar";
 import ResultsGrid from "@/components/ResultsGrid";
 import RecommendedForYou from "@/components/RecommendedForYou";
 import ExploreOtherServices from "@/components/ExploreOtherServices";
+import RecentlySwapped from "@/components/RecentlySwapped";
 import { searchMulti, getTrending } from "@/lib/tmdb";
 
 const Index = () => {
@@ -42,6 +43,7 @@ const Index = () => {
         <>
           <RecommendedForYou />
           <ExploreOtherServices />
+          <RecentlySwapped />
           {trendingData && (
             <ResultsGrid results={trendingData.results} title="Trending This Week" />
           )}

@@ -281,7 +281,18 @@ const ServiceSwapModal = ({ open, onClose, show, targetProvider, targetServiceId
                 )}
                 {showChecklist && (
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      if (user && underused) {
+                        await supabase.from("service_swaps").insert({
+                          user_id: user.id,
+                          old_service: underused.serviceName,
+                          new_service: targetServiceId,
+                          show_title: title,
+                          show_tmdb_id: show.id,
+                          show_poster_path: show.poster_path,
+                          monthly_savings: underused.monthlyCost,
+                        });
+                      }
                       setShowSuccess(true);
                       setTimeout(() => {
                         setShowSuccess(false);

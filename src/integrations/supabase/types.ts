@@ -176,6 +176,42 @@ export type Database = {
         }
         Relationships: []
       }
+      service_swaps: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_savings: number
+          new_service: string
+          old_service: string
+          show_poster_path: string | null
+          show_title: string
+          show_tmdb_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_savings?: number
+          new_service: string
+          old_service: string
+          show_poster_path?: string | null
+          show_title: string
+          show_tmdb_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_savings?: number
+          new_service?: string
+          old_service?: string
+          show_poster_path?: string | null
+          show_title?: string
+          show_tmdb_id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
