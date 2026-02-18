@@ -3,9 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getRecommendations, getWatchProviders, getImageUrl, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
 import MovieCard from "./MovieCard";
-import { motion, AnimatePresence } from "framer-motion";
+import ServiceSwapModal from "./ServiceSwapModal";
+import { motion } from "framer-motion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { X, ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 
 interface ExploreItem {
   item: TMDBResult;
@@ -43,13 +44,12 @@ const ExploreOtherServices = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<ExploreItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [underusedService, setUnderusedService] = useState<string | null>(null);
-  const [popup, setPopup] = useState<{ show: ExploreItem; x: number; y: number } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ExploreItem | null>(null);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
 
-    const fetch = async () => {
+    const fetchData = async () => {
       try {
         const { data: subs } = await supabase
           .from("active_subscriptions")
@@ -60,31 +60,13 @@ const ExploreOtherServices = () => {
         const userServices = new Set((subs || []).map((s) => s.service_name.toLowerCase()));
         if (userServices.size === 0) { setLoading(false); return; }
 
-        // Find underused service (least cues)
         const { data: allCues } = await supabase
           .from("cues")
           .select("tmdb_id, service_provider")
           .eq("user_id", user.id);
 
-        const serviceCueCount: Record<string, number> = {};
-        for (const c of allCues || []) {
-          const svc = c.service_provider?.toLowerCase() || "";
-          if (userServices.has(svc)) {
-            serviceCueCount[svc] = (serviceCueCount[svc] || 0) + 1;
-          }
-        }
-        // Least-used current service
-        let leastUsed: string | null = null;
-        let leastCount = Infinity;
-        for (const svc of userServices) {
-          const count = serviceCueCount[svc] || 0;
-          if (count < leastCount) { leastCount = count; leastUsed = svc; }
-        }
-        setUnderusedService(leastUsed);
-
         const existingIds = new Set((allCues || []).map((c) => c.tmdb_id));
 
-        // Get 3 most recent cues for recs
         const { data: recentCues } = await supabase
           .from("cues")
           .select("tmdb_id, title, media_type")
@@ -111,7 +93,6 @@ const ExploreOtherServices = () => {
           }
         }
 
-        // Filter to shows NOT on user's services but on a known service
         const providerResults = await Promise.all(
           merged.slice(0, 40).map(async (item) => {
             const providers = await getWatchProviders(item.media_type, item.id);
@@ -135,13 +116,12 @@ const ExploreOtherServices = () => {
       }
     };
 
-    fetch();
+    fetchData();
   }, [user]);
 
   const handleSwitchWatch = (e: React.MouseEvent, rec: ExploreItem) => {
     e.stopPropagation();
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
-    setPopup({ show: rec, x: rect.left, y: rect.top });
+    setSelectedItem(rec);
   };
 
   if (loading || !user || items.length === 0) return null;
@@ -165,7 +145,6 @@ const ExploreOtherServices = () => {
               <div className="relative rounded-xl ring-1 ring-[hsl(var(--glow)_/_0.3)] shadow-[0_0_12px_hsl(var(--glow)_/_0.15)]">
                 <MovieCard item={rec.item} index={i} />
               </div>
-              {/* Service badge */}
               <div className="mt-1.5 flex items-center gap-1.5">
                 <div className="h-4 w-4 rounded overflow-hidden shrink-0">
                   <img
@@ -178,7 +157,6 @@ const ExploreOtherServices = () => {
                   Available on {rec.provider.provider_name}
                 </span>
               </div>
-              {/* Switch & Watch button */}
               <button
                 onClick={(e) => handleSwitchWatch(e, rec)}
                 className="mt-2 w-full py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-foreground hover:bg-accent/80 transition-colors ring-1 ring-[hsl(var(--glow)_/_0.2)]"
@@ -191,49 +169,15 @@ const ExploreOtherServices = () => {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
-      {/* Switch & Watch Popup */}
-      <AnimatePresence>
-        {popup && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={() => setPopup(null)}
-          >
-            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
-            <motion.div
-              onClick={(e) => e.stopPropagation()}
-              className="relative glass-strong rounded-2xl p-6 max-w-sm w-full shadow-xl ring-1 ring-[hsl(var(--glow)_/_0.3)]"
-            >
-              <button
-                onClick={() => setPopup(null)}
-                className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-8 w-8 rounded-lg overflow-hidden shrink-0">
-                  <img
-                    src={getImageUrl(popup.show.provider.logo_path, "w200") || ""}
-                    alt={popup.show.provider.provider_name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <h3 className="font-semibold text-foreground text-base">
-                  {popup.show.item.title || popup.show.item.name}
-                </h3>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                This show is on <span className="font-semibold text-foreground">{popup.show.provider.provider_name}</span>.
-                {underusedService && (
-                  <> You could swap <span className="font-semibold text-foreground capitalize">{underusedService}</span> to save money this month.</>
-                )}
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {selectedItem && (
+        <ServiceSwapModal
+          open={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          show={selectedItem.item}
+          targetProvider={selectedItem.provider}
+          targetServiceId={selectedItem.serviceName}
+        />
+      )}
     </section>
   );
 };
