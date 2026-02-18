@@ -57,9 +57,14 @@ const RecentlySwapped = () => {
             </p>
           </div>
           {totalSavings > 0 && (
-            <div className="flex items-center gap-1.5 bg-[hsl(var(--brand-cyan)_/_0.1)] text-[hsl(var(--brand-cyan))] text-sm font-bold px-3 py-1.5 rounded-full ring-1 ring-[hsl(var(--brand-cyan)_/_0.3)]">
-              <TrendingDown className="h-4 w-4" />
-              ${totalSavings.toFixed(2)}/mo saved
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 bg-[hsl(var(--brand-cyan)_/_0.1)] text-[hsl(var(--brand-cyan))] text-sm font-bold px-3 py-1.5 rounded-full ring-1 ring-[hsl(var(--brand-cyan)_/_0.3)]">
+                <TrendingDown className="h-4 w-4" />
+                ${totalSavings.toFixed(2)}/mo
+              </div>
+              <div className="flex items-center gap-1.5 bg-[hsl(var(--brand-purple)_/_0.15)] text-[hsl(var(--brand-purple))] text-sm font-bold px-3 py-1.5 rounded-full ring-1 ring-[hsl(var(--brand-purple)_/_0.3)]">
+                🎉 ${(totalSavings * 12).toFixed(2)}/yr projected
+              </div>
             </div>
           )}
         </div>
