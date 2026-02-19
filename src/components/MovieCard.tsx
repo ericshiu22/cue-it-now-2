@@ -103,7 +103,7 @@ const MovieCard = ({ item, index, hideProviderBadges = false }: MovieCardProps) 
 
         {/* Streaming provider badges on poster */}
         {!hideProviderBadges && providers.length > 0 && (
-          <div className="absolute bottom-2 left-2 flex items-center gap-1 z-10">
+          <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
             {providers.map((p) => (
               <div
                 key={p.provider_id}
@@ -120,7 +120,7 @@ const MovieCard = ({ item, index, hideProviderBadges = false }: MovieCardProps) 
           </div>
         )}
         {isRentBuyOnly && (
-          <div className="absolute bottom-2 left-2 z-10">
+          <div className="absolute top-2 right-2 z-10">
             <span className="bg-secondary/90 backdrop-blur-sm text-foreground text-[10px] font-semibold px-2 py-1 rounded-md shadow-md">
               Rent/Buy
             </span>
