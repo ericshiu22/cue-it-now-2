@@ -224,84 +224,63 @@ const SubscriptionHub = () => {
           </div>
         </motion.div>
 
-        {/* ── Subscription Health + Active Services ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Subscription Health */}
-          <SubscriptionHealth onHealthData={setHealthItems} />
-
-          {/* Active Services Manager */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-brand">
-                  <Tv className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-foreground">Active Services</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {subs.length} service{subs.length !== 1 ? "s" : ""} · ${totalMonthly.toFixed(2)}/mo
-                  </p>
-                </div>
+        {/* ── Combined: Your Services (Health + Management) ── */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-6 space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-brand">
+                <Tv className="h-5 w-5 text-primary-foreground" />
               </div>
-              <button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="h-9 w-9 rounded-lg bg-secondary border border-border hover:border-primary/50 flex items-center justify-center transition-colors"
-              >
-                <Plus className={`h-4 w-4 text-foreground transition-transform ${showAddForm ? "rotate-45" : ""}`} />
-              </button>
+              <div>
+                <h2 className="text-base font-bold text-foreground">Your Services</h2>
+                <p className="text-xs text-muted-foreground">
+                  {subs.length} service{subs.length !== 1 ? "s" : ""} · ${totalMonthly.toFixed(2)}/mo
+                  {healthItems.length > 0 && (() => {
+                    const redCount = healthItems.filter((h) => h.status === "red").length;
+                    return redCount > 0 ? ` · ${redCount} need${redCount === 1 ? "s" : ""} attention` : "";
+                  })()}
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="h-9 w-9 rounded-lg bg-secondary border border-border hover:border-primary/50 flex items-center justify-center transition-colors"
+            >
+              <Plus className={`h-4 w-4 text-foreground transition-transform ${showAddForm ? "rotate-45" : ""}`} />
+            </button>
+          </div>
 
-            <AnimatePresence>
-              {showAddForm && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                  <div className="p-4 rounded-xl bg-secondary/50 border border-border space-y-3">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Service</label>
-                      <select value={newService} onChange={(e) => setNewService(e.target.value)} className="w-full rounded-lg bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                        <option value="">Select a service…</option>
-                        {availableServices.map((s) => (<option key={s.id} value={s.id}>{s.logo} {s.name}</option>))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Monthly Cost ($)</label>
-                      <input type="number" min="0" max="999" step="0.01" value={newCost} onChange={(e) => setNewCost(e.target.value)} placeholder="9.99" className="w-full rounded-lg bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
-                    </div>
-                    <button onClick={addSubscription} disabled={!newService || !newCost || addingSub} className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 glow">
-                      {addingSub ? "Adding…" : "Add Subscription"}
-                    </button>
+          <AnimatePresence>
+            {showAddForm && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                <div className="p-4 rounded-xl bg-secondary/50 border border-border space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Service</label>
+                    <select value={newService} onChange={(e) => setNewService(e.target.value)} className="w-full rounded-lg bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                      <option value="">Select a service…</option>
+                      {availableServices.map((s) => (<option key={s.id} value={s.id}>{s.logo} {s.name}</option>))}
+                    </select>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {subs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No subscriptions yet. Tap + to add your first.</p>
-            ) : (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                <AnimatePresence>
-                  {subs.map((sub) => {
-                    const service = getService(sub.service_name);
-                    return (
-                      <motion.div key={sub.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10, height: 0 }} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/40 border border-border group">
-                        <span className="text-xl flex-shrink-0">{service?.logo || "📺"}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{service?.name || sub.service_name}</p>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <DollarSign className="h-3.5 w-3.5" />
-                          <span>{Number(sub.monthly_cost).toFixed(2)}</span>
-                        </div>
-                        <button onClick={() => removeSubscription(sub.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100" aria-label="Remove subscription">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Monthly Cost ($)</label>
+                    <input type="number" min="0" max="999" step="0.01" value={newCost} onChange={(e) => setNewCost(e.target.value)} placeholder="9.99" className="w-full rounded-lg bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                  <button onClick={addSubscription} disabled={!newService || !newCost || addingSub} className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 glow">
+                    {addingSub ? "Adding…" : "Add Subscription"}
+                  </button>
+                </div>
+              </motion.div>
             )}
-          </motion.div>
-        </div>
+          </AnimatePresence>
+
+          {subs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No subscriptions yet. Tap + to add your first.</p>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+              <SubscriptionHealth onHealthData={setHealthItems} embedded subs={subs} onRemove={removeSubscription} />
+            </div>
+          )}
+        </motion.div>
 
         {/* (Savings + Optimization moved to banner above) */}
 
