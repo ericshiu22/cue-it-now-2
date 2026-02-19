@@ -7,7 +7,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import MyQueue from "./pages/MyQueue";
-import LinkUp from "./pages/LinkUp";
 import Friends from "./pages/Friends";
 import ShowDetail from "./pages/ShowDetail";
 import Auth from "./pages/Auth";
@@ -29,7 +28,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/queue" element={<MyQueue />} />
-            <Route path="/linkup" element={<LinkUp />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/show/:type/:id" element={<ShowDetail />} />
             <Route path="/auth" element={<Auth />} />
