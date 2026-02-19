@@ -225,7 +225,7 @@ const SubscriptionHub = () => {
           </div>
         </motion.div>
 
-        {/* ── Two-column: Services + Swap History ── */}
+        {/* ── Two-column: Services + Shows by Service ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Your Services */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 space-y-3">
@@ -273,129 +273,129 @@ const SubscriptionHub = () => {
             )}
           </motion.div>
 
-          {/* Service Swap History */}
-          {swaps.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <History className="h-4 w-4 text-primary" />
-                  <h2 className="text-sm font-bold text-foreground">Swap History</h2>
-                  <span className="text-[11px] text-muted-foreground">{swaps.length} swap{swaps.length !== 1 ? "s" : ""}</span>
-                </div>
-                {totalSwapSavings > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-[hsl(var(--brand-cyan))]">
-                      <TrendingDown className="h-3 w-3" />
-                      ${totalSwapSavings.toFixed(2)}/mo
-                    </span>
-                  </div>
-                )}
-              </div>
+          {/* Shows by Service Pie Chart */}
+          {healthItems.length > 0 && (() => {
+            const pieData = healthItems
+              .filter((h) => h.cueCount > 0)
+              .map((h) => {
+                const info = getService(h.serviceId);
+                return {
+                  name: info?.name || h.serviceName,
+                  value: h.cueCount,
+                  color: info?.color || "hsl(var(--muted))",
+                };
+              })
+              .sort((a, b) => b.value - a.value);
 
-              <div className="space-y-2 max-h-[360px] overflow-y-auto">
-                {swaps.map((swap, i) => {
-                  const oldInfo = getService(swap.old_service);
-                  const newInfo = getService(swap.new_service);
-                  return (
-                    <motion.div key={swap.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/40 transition-colors">
-                      {swap.show_poster_path && (
-                        <img src={getImageUrl(swap.show_poster_path, "w200") || ""} alt={swap.show_title} className="h-10 w-7 rounded object-cover shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">{swap.show_title}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[10px] text-muted-foreground">{oldInfo?.logo} → {newInfo?.logo}</span>
-                          {swap.monthly_savings > 0 && (
-                            <span className="text-[10px] font-semibold text-[hsl(var(--brand-cyan))]">+${Number(swap.monthly_savings).toFixed(2)}</span>
-                          )}
-                        </div>
+            if (pieData.length === 0) return null;
+
+            const totalShows = pieData.reduce((sum, d) => sum + d.value, 0);
+
+            return (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <PieChartIcon className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-bold text-foreground">Shows by Service</h2>
+                  <span className="text-[11px] text-muted-foreground">{totalShows} total</span>
+                </div>
+
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-[200px] h-[200px] flex-shrink-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={85}
+                          paddingAngle={3}
+                          animationBegin={200}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
+                          dataKey="value"
+                          strokeWidth={0}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={index} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const d = payload[0].payload;
+                            return (
+                              <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+                                <p className="font-semibold text-foreground">{d.name}</p>
+                                <p className="text-muted-foreground">{d.value} show{d.value !== 1 ? "s" : ""} · {Math.round((d.value / totalShows) * 100)}%</p>
+                              </div>
+                            );
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="w-full grid grid-cols-2 gap-x-6 gap-y-2">
+                    {pieData.map((d, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
+                        <span className="text-xs text-foreground truncate">{d.name}</span>
+                        <span className="text-[11px] text-muted-foreground ml-auto">{d.value}</span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0">{formatDistanceToNow(new Date(swap.created_at), { addSuffix: true })}</span>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })()}
         </div>
 
-        {/* ── Shows per Service Pie Chart ── */}
-        {healthItems.length > 0 && (() => {
-          const pieData = healthItems
-            .filter((h) => h.cueCount > 0)
-            .map((h) => {
-              const info = getService(h.serviceId);
-              return {
-                name: info?.name || h.serviceName,
-                value: h.cueCount,
-                color: info?.color || "hsl(var(--muted))",
-              };
-            })
-            .sort((a, b) => b.value - a.value);
-
-          if (pieData.length === 0) return null;
-
-          const totalShows = pieData.reduce((sum, d) => sum + d.value, 0);
-
-          return (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass rounded-2xl p-5 space-y-3">
+        {/* ── Swap History (full width) ── */}
+        {swaps.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <PieChartIcon className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-bold text-foreground">Shows by Service</h2>
-                <span className="text-[11px] text-muted-foreground">{totalShows} total</span>
+                <History className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-bold text-foreground">Swap History</h2>
+                <span className="text-[11px] text-muted-foreground">{swaps.length} swap{swaps.length !== 1 ? "s" : ""}</span>
               </div>
-
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="w-[220px] h-[220px] flex-shrink-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={90}
-                        paddingAngle={3}
-                        animationBegin={200}
-                        animationDuration={1000}
-                        animationEasing="ease-out"
-                        dataKey="value"
-                        strokeWidth={0}
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={index} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          const d = payload[0].payload;
-                          return (
-                            <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
-                              <p className="font-semibold text-foreground">{d.name}</p>
-                              <p className="text-muted-foreground">{d.value} show{d.value !== 1 ? "s" : ""} · {Math.round((d.value / totalShows) * 100)}%</p>
-                            </div>
-                          );
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+              {totalSwapSavings > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-[11px] font-bold text-[hsl(var(--brand-cyan))]">
+                    <TrendingDown className="h-3 w-3" />
+                    ${totalSwapSavings.toFixed(2)}/mo
+                  </span>
                 </div>
+              )}
+            </div>
 
-                {/* Legend */}
-                <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-2">
-                  {pieData.map((d, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
-                      <span className="text-xs text-foreground truncate">{d.name}</span>
-                      <span className="text-[11px] text-muted-foreground ml-auto">{d.value}</span>
+            <div className="space-y-2 max-h-[360px] overflow-y-auto">
+              {swaps.map((swap, i) => {
+                const oldInfo = getService(swap.old_service);
+                const newInfo = getService(swap.new_service);
+                return (
+                  <motion.div key={swap.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/40 transition-colors">
+                    {swap.show_poster_path && (
+                      <img src={getImageUrl(swap.show_poster_path, "w200") || ""} alt={swap.show_title} className="h-10 w-7 rounded object-cover shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{swap.show_title}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] text-muted-foreground">{oldInfo?.logo} → {newInfo?.logo}</span>
+                        {swap.monthly_savings > 0 && (
+                          <span className="text-[10px] font-semibold text-[hsl(var(--brand-cyan))]">+${Number(swap.monthly_savings).toFixed(2)}</span>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })()}
+                    <span className="text-[10px] text-muted-foreground shrink-0">{formatDistanceToNow(new Date(swap.created_at), { addSuffix: true })}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
       </main>
 
