@@ -224,116 +224,99 @@ const SubscriptionHub = () => {
           </div>
         </motion.div>
 
-        {/* ── Your Services ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <Tv className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground">Your Services</h2>
-              <span className="text-[11px] text-muted-foreground">
-                {subs.length} · ${totalMonthly.toFixed(2)}/mo
-              </span>
-            </div>
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="h-7 w-7 rounded-md bg-secondary/60 hover:bg-secondary flex items-center justify-center transition-colors"
-            >
-              <Plus className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${showAddForm ? "rotate-45" : ""}`} />
-            </button>
-          </div>
-
-          <AnimatePresence>
-            {showAddForm && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 space-y-2">
-                  <select value={newService} onChange={(e) => setNewService(e.target.value)} className="w-full rounded-md bg-background border border-border px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-                    <option value="">Select a service…</option>
-                    {availableServices.map((s) => (<option key={s.id} value={s.id}>{s.logo} {s.name}</option>))}
-                  </select>
-                  <div className="flex gap-2">
-                    <input type="number" min="0" max="999" step="0.01" value={newCost} onChange={(e) => setNewCost(e.target.value)} placeholder="$/mo" className="flex-1 rounded-md bg-background border border-border px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
-                    <button onClick={addSubscription} disabled={!newService || !newCost || addingSub} className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-40">
-                      {addingSub ? "…" : "Add"}
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {subs.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-3">No subscriptions yet. Tap + to add.</p>
-          ) : (
-            <div className="divide-y divide-border/30 max-h-[360px] overflow-y-auto">
-              <SubscriptionHealth onHealthData={setHealthItems} embedded subs={subs} onRemove={removeSubscription} />
-            </div>
-          )}
-        </motion.div>
-
-        {/* (Savings + Optimization moved to banner above) */}
-
-        {/* ── Row 2: Recently Swapped (Service Swap History) ── */}
-        {swaps.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-brand">
-                  <History className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-foreground">Service Swap History</h2>
-                  <p className="text-xs text-muted-foreground">{swaps.length} swap{swaps.length !== 1 ? "s" : ""} completed</p>
-                </div>
+        {/* ── Two-column: Services + Swap History ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Your Services */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Tv className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-bold text-foreground">Your Services</h2>
+                <span className="text-[11px] text-muted-foreground">
+                  {subs.length} · ${totalMonthly.toFixed(2)}/mo
+                </span>
               </div>
-              {totalSwapSavings > 0 && (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 bg-[hsl(var(--brand-cyan)_/_0.1)] text-[hsl(var(--brand-cyan))] text-sm font-bold px-3 py-1.5 rounded-full ring-1 ring-[hsl(var(--brand-cyan)_/_0.3)]">
-                    <TrendingDown className="h-4 w-4" />
-                    ${totalSwapSavings.toFixed(2)}/mo
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-[hsl(var(--brand-purple)_/_0.15)] text-[hsl(var(--brand-purple))] text-sm font-bold px-3 py-1.5 rounded-full ring-1 ring-[hsl(var(--brand-purple)_/_0.3)]">
-                    🎉 ${totalYearlySavings.toFixed(2)}/yr
-                  </div>
-                </div>
-              )}
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="h-7 w-7 rounded-md bg-secondary/60 hover:bg-secondary flex items-center justify-center transition-colors"
+              >
+                <Plus className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${showAddForm ? "rotate-45" : ""}`} />
+              </button>
             </div>
 
-            <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex gap-4 pb-4">
+            <AnimatePresence>
+              {showAddForm && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                  <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 space-y-2">
+                    <select value={newService} onChange={(e) => setNewService(e.target.value)} className="w-full rounded-md bg-background border border-border px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                      <option value="">Select a service…</option>
+                      {availableServices.map((s) => (<option key={s.id} value={s.id}>{s.logo} {s.name}</option>))}
+                    </select>
+                    <div className="flex gap-2">
+                      <input type="number" min="0" max="999" step="0.01" value={newCost} onChange={(e) => setNewCost(e.target.value)} placeholder="$/mo" className="flex-1 rounded-md bg-background border border-border px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
+                      <button onClick={addSubscription} disabled={!newService || !newCost || addingSub} className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-40">
+                        {addingSub ? "…" : "Add"}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {subs.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-3">No subscriptions yet. Tap + to add.</p>
+            ) : (
+              <div className="divide-y divide-border/30 max-h-[360px] overflow-y-auto">
+                <SubscriptionHealth onHealthData={setHealthItems} embedded subs={subs} onRemove={removeSubscription} />
+              </div>
+            )}
+          </motion.div>
+
+          {/* Service Swap History */}
+          {swaps.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <History className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-bold text-foreground">Swap History</h2>
+                  <span className="text-[11px] text-muted-foreground">{swaps.length} swap{swaps.length !== 1 ? "s" : ""}</span>
+                </div>
+                {totalSwapSavings > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 text-[11px] font-bold text-[hsl(var(--brand-cyan))]">
+                      <TrendingDown className="h-3 w-3" />
+                      ${totalSwapSavings.toFixed(2)}/mo
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2 max-h-[360px] overflow-y-auto">
                 {swaps.map((swap, i) => {
                   const oldInfo = getService(swap.old_service);
                   const newInfo = getService(swap.new_service);
                   return (
-                    <motion.div key={swap.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="w-[280px] shrink-0 rounded-xl p-4 bg-secondary/30 ring-1 ring-border hover:ring-[hsl(var(--brand-cyan)_/_0.3)] transition-all">
-                      <div className="flex gap-3 mb-3">
-                        {swap.show_poster_path && (
-                          <img src={getImageUrl(swap.show_poster_path, "w200") || ""} alt={swap.show_title} className="h-16 w-11 rounded-lg object-cover shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate whitespace-normal leading-tight">{swap.show_title}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">{formatDistanceToNow(new Date(swap.created_at), { addSuffix: true })}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-medium">
-                          {oldInfo?.logo || "📺"} <span className="capitalize">{oldInfo?.name || swap.old_service}</span>
-                        </div>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[hsl(var(--brand-cyan)_/_0.1)] text-[hsl(var(--brand-cyan))] text-xs font-medium">
-                          {newInfo?.logo || "📺"} <span className="capitalize">{newInfo?.name || swap.new_service}</span>
-                        </div>
-                      </div>
-                      {swap.monthly_savings > 0 && (
-                        <p className="mt-2 text-[11px] text-[hsl(var(--brand-cyan))] font-semibold">💰 Saving ${Number(swap.monthly_savings).toFixed(2)}/mo</p>
+                    <motion.div key={swap.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/40 transition-colors">
+                      {swap.show_poster_path && (
+                        <img src={getImageUrl(swap.show_poster_path, "w200") || ""} alt={swap.show_title} className="h-10 w-7 rounded object-cover shrink-0" />
                       )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{swap.show_title}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground">{oldInfo?.logo} → {newInfo?.logo}</span>
+                          {swap.monthly_savings > 0 && (
+                            <span className="text-[10px] font-semibold text-[hsl(var(--brand-cyan))]">+${Number(swap.monthly_savings).toFixed(2)}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0">{formatDistanceToNow(new Date(swap.created_at), { addSuffix: true })}</span>
                     </motion.div>
                   );
                 })}
               </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </div>
 
       </main>
 
