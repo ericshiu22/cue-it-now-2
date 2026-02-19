@@ -160,15 +160,32 @@ const SubscriptionHealth = ({ onHealthData, embedded, subs: externalSubs, onRemo
               />
             </div>
 
-            {/* Name */}
-            <span className="flex-1 text-sm font-medium text-foreground truncate">
-              {displayService?.name || service.serviceName}
-            </span>
-
-            {/* Activity hint */}
-            <span className="text-[11px] text-muted-foreground shrink-0 hidden sm:inline">
-              {service.cueCount} cued · {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d` : "—"}
-            </span>
+            {/* Name + health bar */}
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-medium text-foreground truncate block">
+                {displayService?.name || service.serviceName}
+              </span>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: config.color }}
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: service.status === "green"
+                        ? "100%"
+                        : service.status === "yellow"
+                        ? "50%"
+                        : "15%",
+                    }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.05 }}
+                  />
+                </div>
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d` : "—"}
+                </span>
+              </div>
+            </div>
 
             {/* Cost */}
             {embedded && matchingSub && (
