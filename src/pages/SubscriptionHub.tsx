@@ -299,22 +299,41 @@ const SubscriptionHub = () => {
                   <span className="text-[11px] text-muted-foreground">{totalShows} total</span>
                 </div>
 
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-[200px] h-[200px] flex-shrink-0">
+                <div className="flex items-center justify-center">
+                  <div className="w-[320px] h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={pieData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={50}
-                          outerRadius={85}
+                          innerRadius={45}
+                          outerRadius={75}
                           paddingAngle={3}
                           animationBegin={200}
                           animationDuration={1000}
                           animationEasing="ease-out"
                           dataKey="value"
                           strokeWidth={0}
+                          label={({ cx, cy, midAngle, outerRadius: or, name, value }) => {
+                            const RADIAN = Math.PI / 180;
+                            const radius = or + 22;
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            return (
+                              <text
+                                x={x}
+                                y={y}
+                                textAnchor={x > cx ? "start" : "end"}
+                                dominantBaseline="central"
+                                className="fill-foreground"
+                                style={{ fontSize: "11px", fontWeight: 500 }}
+                              >
+                                {name} ({value})
+                              </text>
+                            );
+                          }}
+                          labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
                         >
                           {pieData.map((entry, index) => (
                             <Cell key={index} fill={entry.color} />
@@ -334,17 +353,6 @@ const SubscriptionHub = () => {
                         />
                       </PieChart>
                     </ResponsiveContainer>
-                  </div>
-
-                  {/* Legend */}
-                  <div className="w-full grid grid-cols-2 gap-x-6 gap-y-2">
-                    {pieData.map((d, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
-                        <span className="text-xs text-foreground truncate">{d.name}</span>
-                        <span className="text-[11px] text-muted-foreground ml-auto">{d.value}</span>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </motion.div>
