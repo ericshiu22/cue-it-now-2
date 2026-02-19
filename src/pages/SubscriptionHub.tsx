@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap,
-  Plus, Trash2, DollarSign, Tv, TrendingDown, ArrowRight, History, Wallet, Rocket,
+  Plus, Trash2, DollarSign, Tv, TrendingDown, ArrowRight, History, Wallet, Rocket, PieChart as PieChartIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 import SubscriptionHealth, { type ServiceHealth } from "@/components/SubscriptionHealth";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface ActiveSub {
   id: string;
@@ -317,6 +318,81 @@ const SubscriptionHub = () => {
             </motion.div>
           )}
         </div>
+
+        {/* ── Shows per Service Pie Chart ── */}
+        {healthItems.length > 0 && (() => {
+          const pieData = healthItems
+            .filter((h) => h.cueCount > 0)
+            .map((h) => {
+              const info = getService(h.serviceId);
+              return {
+                name: info?.name || h.serviceName,
+                value: h.cueCount,
+                color: info?.color || "hsl(var(--muted))",
+              };
+            })
+            .sort((a, b) => b.value - a.value);
+
+          if (pieData.length === 0) return null;
+
+          const totalShows = pieData.reduce((sum, d) => sum + d.value, 0);
+
+          return (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass rounded-2xl p-5 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <PieChartIcon className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-bold text-foreground">Shows by Service</h2>
+                <span className="text-[11px] text-muted-foreground">{totalShows} total</span>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="w-[220px] h-[220px] flex-shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={index} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0].payload;
+                          return (
+                            <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+                              <p className="font-semibold text-foreground">{d.name}</p>
+                              <p className="text-muted-foreground">{d.value} show{d.value !== 1 ? "s" : ""} · {Math.round((d.value / totalShows) * 100)}%</p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Legend */}
+                <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-2">
+                  {pieData.map((d, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
+                      <span className="text-xs text-foreground truncate">{d.name}</span>
+                      <span className="text-[11px] text-muted-foreground ml-auto">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
 
       </main>
 
