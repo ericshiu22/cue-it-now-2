@@ -163,7 +163,7 @@ const SubscriptionHub = () => {
             {subs.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-3">No subscriptions yet. Tap + to add.</p>
             ) : (
-              <div className="divide-y divide-border/30">
+              <div className="max-h-[400px] overflow-y-auto divide-y divide-border/30">
                 <SubscriptionHealth onHealthData={setHealthItems} embedded subs={subs} onRemove={removeSubscription} />
               </div>
             )}
