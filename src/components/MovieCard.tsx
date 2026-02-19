@@ -8,6 +8,7 @@ import { addCue } from "@/lib/cue-actions";
 interface MovieCardProps {
   item: TMDBResult;
   index: number;
+  hideProviderBadges?: boolean;
 }
 
 // Map TMDB provider names to our service IDs
@@ -24,7 +25,7 @@ const mapProviderToServiceId = (name: string): string => {
   return lower;
 };
 
-const MovieCard = ({ item, index }: MovieCardProps) => {
+const MovieCard = ({ item, index, hideProviderBadges = false }: MovieCardProps) => {
   const navigate = useNavigate();
   const [cued, setCued] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -101,7 +102,7 @@ const MovieCard = ({ item, index }: MovieCardProps) => {
         )}
 
         {/* Streaming provider badges on poster */}
-        {providers.length > 0 && (
+        {!hideProviderBadges && providers.length > 0 && (
           <div className="absolute bottom-2 left-2 flex items-center gap-1 z-10">
             {providers.map((p) => (
               <div
