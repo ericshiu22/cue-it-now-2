@@ -166,7 +166,7 @@ const SubscriptionHealth = ({ onHealthData, embedded, subs: externalSubs, onRemo
                 {displayService?.name || service.serviceName}
               </span>
               <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                <div className="relative flex-1 h-1.5 rounded-full bg-secondary overflow-hidden group/bar" title={`${config.label} — ${service.cueCount} cued`}>
                   <motion.div
                     className="h-full rounded-full"
                     style={{ backgroundColor: config.color }}
@@ -180,6 +180,9 @@ const SubscriptionHealth = ({ onHealthData, embedded, subs: externalSubs, onRemo
                     }}
                     transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.05 }}
                   />
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-medium text-foreground bg-popover border border-border shadow-md whitespace-nowrap opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none">
+                    {config.label}
+                  </span>
                 </div>
                 <span className="text-[10px] text-muted-foreground shrink-0">
                   {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d` : "—"}
