@@ -132,7 +132,6 @@ const SubscriptionHealth = ({ onHealthData, embedded, subs: externalSubs, onRemo
     <AnimatePresence>
       {sorted.map((service, i) => {
         const config = STATUS_CONFIG[service.status];
-        const Icon = config.icon;
         const displayService = getService(service.serviceId);
         const matchingSub = externalSubs?.find(
           (s) => s.service_name.toLowerCase() === service.serviceId.toLowerCase()
@@ -141,75 +140,65 @@ const SubscriptionHealth = ({ onHealthData, embedded, subs: externalSubs, onRemo
         return (
           <motion.div
             key={service.serviceId}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10, height: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all group ${
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ delay: i * 0.03 }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${
               service.status === "red"
-                ? "cursor-pointer hover:border-red-500/60 hover:bg-red-500/10"
-                : "cursor-default"
-            } ${config.bgClass}`}
+                ? "cursor-pointer hover:bg-destructive/5"
+                : "cursor-default hover:bg-secondary/40"
+            }`}
             onClick={() => service.status === "red" && setSelectedService(service)}
           >
-            <span className="text-xl flex-shrink-0">
-              {displayService?.logo || "📺"}
-            </span>
-
-            <div className="flex-1 text-left min-w-0">
-              <div className="text-sm font-semibold text-foreground truncate">
-                {displayService?.name || service.serviceName}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {service.cueCount} cued · {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d ago` : "never"}
-              </div>
+            {/* Service icon + health dot */}
+            <div className="relative flex-shrink-0">
+              <span className="text-lg">{displayService?.logo || "📺"}</span>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-background"
+                style={{ backgroundColor: config.color }}
+              />
             </div>
 
-            {/* Cost (embedded mode) */}
+            {/* Name */}
+            <span className="flex-1 text-sm font-medium text-foreground truncate">
+              {displayService?.name || service.serviceName}
+            </span>
+
+            {/* Activity hint */}
+            <span className="text-[11px] text-muted-foreground shrink-0 hidden sm:inline">
+              {service.cueCount} cued · {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d` : "—"}
+            </span>
+
+            {/* Cost */}
             {embedded && matchingSub && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground shrink-0">
-                <DollarSign className="h-3.5 w-3.5" />
-                <span>{Number(matchingSub.monthly_cost).toFixed(2)}</span>
-              </div>
+              <span className="text-xs font-semibold text-muted-foreground tabular-nums shrink-0">
+                ${Number(matchingSub.monthly_cost).toFixed(2)}
+              </span>
             )}
 
-            {/* Cancel button for red services */}
+            {/* Cancel for red */}
             {service.status === "red" && displayService?.cancelUrl && (
               <a
                 href={displayService.cancelUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-destructive/15 text-destructive hover:bg-destructive/25 transition-colors ring-1 ring-destructive/30 shrink-0"
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors shrink-0"
               >
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-2.5 w-2.5" />
                 Cancel
               </a>
             )}
-
-            {/* Health bar */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: service.status === "green" ? "100%" : service.status === "yellow" ? "50%" : "15%",
-                    backgroundColor: config.color,
-                    boxShadow: `0 0 8px ${config.color}`,
-                  }}
-                />
-              </div>
-              <Icon className="h-4 w-4 flex-shrink-0" style={{ color: config.color }} />
-            </div>
 
             {/* Delete (embedded mode) */}
             {embedded && matchingSub && onRemove && (
               <button
                 onClick={(e) => { e.stopPropagation(); onRemove(matchingSub.id); }}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                className="p-1 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100 shrink-0"
                 aria-label="Remove subscription"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
           </motion.div>
@@ -221,7 +210,7 @@ const SubscriptionHealth = ({ onHealthData, embedded, subs: externalSubs, onRemo
   if (embedded) {
     return (
       <>
-        <div className="space-y-2">{serviceRows}</div>
+        <div className="space-y-0.5">{serviceRows}</div>
         {/* Churn Report Modal */}
         <AnimatePresence>
           {selectedService && (
