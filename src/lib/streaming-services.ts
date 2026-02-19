@@ -18,7 +18,7 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
   },
   max: {
     id: "max",
-    name: "Max",
+    name: "HBO Max",
     color: "hsl(240, 60%, 55%)",
     logo: "🟣",
     searchUrl: (title) => `https://play.max.com/search?q=${encodeURIComponent(title)}`,
