@@ -356,6 +356,9 @@ const SubscriptionHub = () => {
                         innerRadius={55}
                         outerRadius={90}
                         paddingAngle={3}
+                        animationBegin={200}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                         dataKey="value"
                         strokeWidth={0}
                       >
