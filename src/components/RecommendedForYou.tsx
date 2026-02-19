@@ -179,18 +179,18 @@ const RecommendedForYou = () => {
           {recommendations.map((rec, i) => (
             <div key={rec.item.id} className="w-[160px] sm:w-[180px] shrink-0">
               <div className="relative">
-                <MovieCard item={rec.item} index={i} />
+                <MovieCard item={rec.item} index={i} hideProviderBadges />
                 {rec.matchedProvider && (
-                  <div className="mt-1.5 flex items-center gap-1.5">
-                    <div className="h-4 w-4 rounded overflow-hidden shrink-0">
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <div className="h-5 w-5 rounded-md overflow-hidden shrink-0 shadow-sm">
                       <img
                         src={getImageUrl(rec.matchedProvider.logo_path, "w200") || ""}
                         alt={rec.matchedProvider.provider_name}
                         className="h-full w-full object-cover"
                       />
                     </div>
-                    <span className="text-[10px] text-muted-foreground truncate whitespace-normal leading-tight">
-                      Available on {rec.matchedProvider.provider_name}
+                    <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                      {rec.matchedProvider.provider_name}
                     </span>
                   </div>
                 )}
