@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, AlertTriangle, CheckCircle, XCircle, X, ExternalLink } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle, XCircle, X, ExternalLink, DollarSign, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getService } from "@/lib/streaming-services";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,11 +69,21 @@ function computeHealth(
 
 export type { ServiceHealth, HealthStatus };
 
-interface SubscriptionHealthProps {
-  onHealthData?: (data: ServiceHealth[]) => void;
+interface SubInfo {
+  id: string;
+  service_name: string;
+  monthly_cost: number;
+  is_active: boolean;
 }
 
-const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
+interface SubscriptionHealthProps {
+  onHealthData?: (data: ServiceHealth[]) => void;
+  embedded?: boolean;
+  subs?: SubInfo[];
+  onRemove?: (id: string) => void;
+}
+
+const SubscriptionHealth = ({ onHealthData, embedded, subs: externalSubs, onRemove }: SubscriptionHealthProps = {}) => {
   const { user } = useAuth();
   const [selectedService, setSelectedService] = useState<ServiceHealth | null>(null);
 
@@ -117,6 +127,140 @@ const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
     return order[a.status] - order[b.status];
   });
 
+  // In embedded mode, render just the service rows (no wrapper card)
+  const serviceRows = (
+    <AnimatePresence>
+      {sorted.map((service, i) => {
+        const config = STATUS_CONFIG[service.status];
+        const Icon = config.icon;
+        const displayService = getService(service.serviceId);
+        const matchingSub = externalSubs?.find(
+          (s) => s.service_name.toLowerCase() === service.serviceId.toLowerCase()
+        );
+
+        return (
+          <motion.div
+            key={service.serviceId}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10, height: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all group ${
+              service.status === "red"
+                ? "cursor-pointer hover:border-red-500/60 hover:bg-red-500/10"
+                : "cursor-default"
+            } ${config.bgClass}`}
+            onClick={() => service.status === "red" && setSelectedService(service)}
+          >
+            <span className="text-xl flex-shrink-0">
+              {displayService?.logo || "📺"}
+            </span>
+
+            <div className="flex-1 text-left min-w-0">
+              <div className="text-sm font-semibold text-foreground truncate">
+                {displayService?.name || service.serviceName}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {service.cueCount} cued · {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d ago` : "never"}
+              </div>
+            </div>
+
+            {/* Cost (embedded mode) */}
+            {embedded && matchingSub && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground shrink-0">
+                <DollarSign className="h-3.5 w-3.5" />
+                <span>{Number(matchingSub.monthly_cost).toFixed(2)}</span>
+              </div>
+            )}
+
+            {/* Cancel button for red services */}
+            {service.status === "red" && displayService?.cancelUrl && (
+              <a
+                href={displayService.cancelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-destructive/15 text-destructive hover:bg-destructive/25 transition-colors ring-1 ring-destructive/30 shrink-0"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Cancel
+              </a>
+            )}
+
+            {/* Health bar */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: service.status === "green" ? "100%" : service.status === "yellow" ? "50%" : "15%",
+                    backgroundColor: config.color,
+                    boxShadow: `0 0 8px ${config.color}`,
+                  }}
+                />
+              </div>
+              <Icon className="h-4 w-4 flex-shrink-0" style={{ color: config.color }} />
+            </div>
+
+            {/* Delete (embedded mode) */}
+            {embedded && matchingSub && onRemove && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRemove(matchingSub.id); }}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                aria-label="Remove subscription"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </motion.div>
+        );
+      })}
+    </AnimatePresence>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        <div className="space-y-2">{serviceRows}</div>
+        {/* Churn Report Modal */}
+        <AnimatePresence>
+          {selectedService && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+              onClick={() => setSelectedService(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25 }}
+                className="w-full max-w-[580px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sticky top-0 z-10 flex justify-end p-3">
+                  <button onClick={() => setSelectedService(null)} className="h-8 w-8 rounded-full bg-muted/80 backdrop-blur flex items-center justify-center hover:bg-muted transition-colors">
+                    <X className="h-4 w-4 text-foreground" />
+                  </button>
+                </div>
+                <MinimalistChurnEmail
+                  serviceName={getService(selectedService.serviceId)?.name || selectedService.serviceName}
+                  monthlyCost={`$${selectedService.monthlyCost.toFixed(2)}`}
+                  showsWatched={0}
+                  showsCued={selectedService.cueCount}
+                  pauseUrl="#"
+                  addShowUrl="/queue"
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
+
   return (
     <>
       <motion.div
@@ -124,92 +268,20 @@ const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
         animate={{ opacity: 1, y: 0 }}
         className="glass rounded-2xl p-6 h-full"
       >
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-9 w-9 rounded-lg bg-gradient-brand flex items-center justify-center">
-              <Activity className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-foreground">Subscription Health</h2>
-              <p className="text-xs text-muted-foreground">
-                {sorted.filter((s) => s.status === "red").length} service{sorted.filter((s) => s.status === "red").length !== 1 ? "s" : ""} need attention
-              </p>
-            </div>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-9 w-9 rounded-lg bg-gradient-brand flex items-center justify-center">
+            <Activity className="h-5 w-5 text-primary-foreground" />
           </div>
-
-          {/* Service list */}
-          <div className="space-y-3">
-            {sorted.map((service, i) => {
-              const config = STATUS_CONFIG[service.status];
-              const Icon = config.icon;
-              const displayService = getService(service.serviceId);
-
-              return (
-                <motion.div
-                  key={service.serviceId}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                    service.status === "red"
-                      ? "cursor-pointer hover:border-red-500/60 hover:bg-red-500/10"
-                      : "cursor-default"
-                  } ${config.bgClass}`}
-                  onClick={() => service.status === "red" && setSelectedService(service)}
-                >
-                  {/* Service logo */}
-                  <span className="text-xl flex-shrink-0">
-                    {displayService?.logo || "📺"}
-                  </span>
-
-                  {/* Info */}
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="text-sm font-semibold text-foreground truncate">
-                      {displayService?.name || service.serviceName}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {service.cueCount} cued · {service.daysSinceActivity !== null ? `${service.daysSinceActivity}d ago` : "never"}
-                    </div>
-                  </div>
-
-                  {/* Cancel button for red services */}
-                  {service.status === "red" && displayService?.cancelUrl && (
-                    <a
-                      href={displayService.cancelUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-destructive/15 text-destructive hover:bg-destructive/25 transition-colors ring-1 ring-destructive/30 shrink-0"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      Cancel
-                    </a>
-                  )}
-
-                  {/* Health bar */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{
-                          width: service.status === "green" ? "100%" : service.status === "yellow" ? "50%" : "15%",
-                          backgroundColor: config.color,
-                          boxShadow: `0 0 8px ${config.color}`,
-                        }}
-                      />
-                    </div>
-                    <Icon
-                      className="h-4 w-4 flex-shrink-0"
-                      style={{ color: config.color }}
-                    />
-                  </div>
-                </motion.div>
-              );
-            })}
+          <div>
+            <h2 className="text-base font-bold text-foreground">Subscription Health</h2>
+            <p className="text-xs text-muted-foreground">
+              {sorted.filter((s) => s.status === "red").length} service{sorted.filter((s) => s.status === "red").length !== 1 ? "s" : ""} need attention
+            </p>
           </div>
+        </div>
+        <div className="space-y-3">{serviceRows}</div>
       </motion.div>
 
-      {/* Minimalist Report Modal */}
       <AnimatePresence>
         {selectedService && (
           <motion.div
@@ -227,16 +299,11 @@ const SubscriptionHealth = ({ onHealthData }: SubscriptionHealthProps = {}) => {
               className="w-full max-w-[580px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close button */}
               <div className="sticky top-0 z-10 flex justify-end p-3">
-                <button
-                  onClick={() => setSelectedService(null)}
-                  className="h-8 w-8 rounded-full bg-muted/80 backdrop-blur flex items-center justify-center hover:bg-muted transition-colors"
-                >
+                <button onClick={() => setSelectedService(null)} className="h-8 w-8 rounded-full bg-muted/80 backdrop-blur flex items-center justify-center hover:bg-muted transition-colors">
                   <X className="h-4 w-4 text-foreground" />
                 </button>
               </div>
-
               <MinimalistChurnEmail
                 serviceName={getService(selectedService.serviceId)?.name || selectedService.serviceName}
                 monthlyCost={`$${selectedService.monthlyCost.toFixed(2)}`}
