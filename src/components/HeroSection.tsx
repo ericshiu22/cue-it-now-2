@@ -27,7 +27,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-xl sm:text-2xl md:text-3xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+          className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
           Find any movie or show and know exactly where to stream it.
         </motion.p>
