@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { User, Bell, Mail, Smartphone, AlertTriangle, Shield, Zap } from "lucide-react";
+import { User, Bell, Mail, Smartphone, AlertTriangle, Shield, Zap, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 /* ── Alert Levels ── */
 const ALERT_LEVELS = [
@@ -102,6 +104,20 @@ const Profile = () => {
   const handleAlertLevel = (level: AlertLevel) => { setAlertLevel(level); syncToDb({ alert_level: level }); };
   const handleToggle = (key: string, value: boolean, setter: (v: boolean) => void) => { setter(value); syncToDb({ [key]: value }); };
 
+  const handleSaveUsername = async () => {
+    const trimmed = username.trim();
+    if (!trimmed || trimmed.length < 3 || trimmed.length > 30) {
+      toast.error("Username must be 3–30 characters.");
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      toast.error("Username can only contain letters, numbers, and underscores.");
+      return;
+    }
+    await syncToDb({ username: trimmed });
+    setUsername(trimmed);
+  };
+
   if (!user) { navigate("/auth"); return null; }
 
   const currentIdx = ALERT_LEVELS.findIndex((l) => l.id === alertLevel);
@@ -136,8 +152,22 @@ const Profile = () => {
                 </div>
               </div>
               {username && (
-                <p className="text-sm text-muted-foreground">Username: <span className="text-foreground font-medium">{username}</span></p>
+                <p className="text-sm text-muted-foreground">Username: <span className="text-foreground font-medium">@{username}</span></p>
               )}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  maxLength={30}
+                  className="max-w-xs"
+                />
+                <Button size="sm" onClick={handleSaveUsername} disabled={saving}>
+                  <Check className="h-4 w-4 mr-1" />
+                  Save
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Letters, numbers, and underscores only. Friends can find you by username or email.</p>
             </section>
 
             {/* Link to Subscription Hub */}
