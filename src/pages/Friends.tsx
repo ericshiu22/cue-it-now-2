@@ -105,13 +105,11 @@ const Friends = () => {
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
     setSearching(true);
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_id, username, avatar_url")
-      .ilike("username", `%${searchQuery.trim()}%`)
-      .neq("user_id", user.id)
-      .limit(10);
-    setSearchResults(data || []);
+    const { data } = await supabase.rpc("search_users", {
+      _query: searchQuery.trim(),
+      _current_user_id: user.id,
+    });
+    setSearchResults((data as Profile[]) || []);
     setSearching(false);
   };
 
