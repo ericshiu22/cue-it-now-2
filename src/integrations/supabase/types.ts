@@ -246,6 +246,14 @@ export type Database = {
           vote_average: number
         }[]
       }
+      search_users: {
+        Args: { _current_user_id: string; _query: string }
+        Returns: {
+          avatar_url: string
+          user_id: string
+          username: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
