@@ -14,16 +14,6 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
       {/* Content */}
       <div className="relative z-10 text-center max-w-3xl mx-auto space-y-6">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-xs font-medium text-muted-foreground"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-cyan animate-pulse-glow" />
-          End search fatigue
-        </motion.div>
-
-        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.7 }}
