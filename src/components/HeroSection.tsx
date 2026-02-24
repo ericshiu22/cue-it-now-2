@@ -29,7 +29,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
-          See what your friends are binging, and where to binge it.
+          Check the Feed. Find your Flow. Cue It.
         </motion.p>
 
         {children}
