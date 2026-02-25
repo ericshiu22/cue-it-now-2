@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import cueLogo from "@/assets/cue-it-logo.png";
 
-const INTRO_DURATION = 3000; // ms before intro animates away
+const INTRO_DURATION = 3500;
 
 const HeroSection = ({ children }: { children: React.ReactNode }) => {
   const [showIntro, setShowIntro] = useState(true);
@@ -15,13 +15,11 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
   return (
     <section
       className={`relative flex flex-col items-center justify-center px-4 overflow-hidden circuit-lines transition-all duration-700 ease-in-out ${
-        showIntro ? "min-h-[70vh]" : "min-h-0 py-6"
+        showIntro ? "min-h-screen" : "min-h-0 py-6"
       }`}
     >
-      {/* Circuit pattern overlay */}
       <div className="absolute inset-0 z-0 circuit-pattern" />
 
-      {/* Gradient orbs for depth */}
       <AnimatePresence>
         {showIntro && (
           <>
@@ -39,31 +37,38 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
         )}
       </AnimatePresence>
 
-      {/* Content */}
       <div className="relative z-10 text-center max-w-3xl mx-auto space-y-6">
         <AnimatePresence>
           {showIntro && (
             <>
               <motion.div
                 key="logo"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, y: -40, scale: 0.8 }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
                 className="flex flex-col items-center gap-3"
               >
                 <img src={cueLogo} alt="Cue It" className="h-48 sm:h-64 w-auto" />
-                <p className="text-sm sm:text-base text-muted-foreground tracking-widest uppercase">
-                  Your Smart Streaming Assistant
-                </p>
               </motion.div>
+
+              <motion.p
+                key="subtitle"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
+                transition={{ delay: 0.4, duration: 0.7 }}
+                className="text-sm sm:text-base text-muted-foreground tracking-widest uppercase"
+              >
+                Your Smart Streaming Assistant
+              </motion.p>
 
               <motion.p
                 key="tagline"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: 0.9, duration: 0.7 }}
                 className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
               >
                 Check the Feed. Find your Flow. Cue It.
@@ -72,10 +77,7 @@ const HeroSection = ({ children }: { children: React.ReactNode }) => {
           )}
         </AnimatePresence>
 
-        <motion.div
-          layout
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-        >
+        <motion.div layout transition={{ duration: 0.6, ease: "easeInOut" }}>
           {children}
         </motion.div>
       </div>
