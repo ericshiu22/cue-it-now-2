@@ -113,6 +113,59 @@ export type Database = {
         }
         Relationships: []
       }
+      friend_group_members: {
+        Row: {
+          created_at: string
+          friend_user_id: string
+          group_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_user_id: string
+          group_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          friend_user_id?: string
+          group_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friend_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "friend_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friend_groups: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string

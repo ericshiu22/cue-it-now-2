@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getImageUrl } from "@/lib/tmdb";
 import { getService, getDeepLink } from "@/lib/streaming-services";
+import FriendGroups from "@/components/FriendGroups";
 
 interface Profile {
   user_id: string;
@@ -60,6 +61,11 @@ const Friends = () => {
   const [linkUpLoading, setLinkUpLoading] = useState(false);
   const [linkUpFilter, setLinkUpFilter] = useState<"all" | "common" | "unique">("all");
 
+  // Group filter state
+  const [friendsGroupFilter, setFriendsGroupFilter] = useState<string | null>(null);
+  const [linkUpGroupFilter, setLinkUpGroupFilter] = useState<string | null>(null);
+  const [groupMembersMap, setGroupMembersMap] = useState<Record<string, string[]>>({});
+
   // --- Friends logic ---
   const fetchFriendships = async () => {
     if (!user) return;
@@ -105,6 +111,28 @@ const Friends = () => {
   };
 
   useEffect(() => { fetchFriendships(); }, [user]);
+
+  // Fetch group members when a group filter is selected
+  const handleGroupFilterChange = async (groupId: string | null, target: "friends" | "linkup") => {
+    if (target === "friends") setFriendsGroupFilter(groupId);
+    else setLinkUpGroupFilter(groupId);
+
+    if (groupId && !groupMembersMap[groupId]) {
+      const { data } = await supabase
+        .from("friend_group_members")
+        .select("friend_user_id")
+        .eq("group_id", groupId);
+      if (data) {
+        setGroupMembersMap((prev) => ({ ...prev, [groupId]: data.map((m) => m.friend_user_id) }));
+      }
+    }
+  };
+
+  const getFilteredFriends = (groupId: string | null) => {
+    if (!groupId) return acceptedFriends;
+    const members = groupMembersMap[groupId] || [];
+    return acceptedFriends.filter((f) => members.includes(f.profile.user_id));
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
@@ -309,18 +337,31 @@ const Friends = () => {
                   </section>
                 )}
 
+                {acceptedFriends.length > 0 && (
+                  <FriendGroups
+                    userId={user.id}
+                    friends={acceptedFriends}
+                    onFilterChange={(gid) => handleGroupFilterChange(gid, "friends")}
+                    activeGroupFilter={friendsGroupFilter}
+                  />
+                )}
+
                 <section>
                   <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4" /> Friends ({acceptedFriends.length})
+                    <Users className="h-4 w-4" /> Friends ({getFilteredFriends(friendsGroupFilter).length})
                   </h2>
                   {acceptedFriends.length === 0 ? (
                     <div className="glass rounded-xl p-8 text-center">
                       <Users className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
                       <p className="text-muted-foreground text-sm">No friends yet. Search for usernames above to add friends!</p>
                     </div>
+                  ) : getFilteredFriends(friendsGroupFilter).length === 0 ? (
+                    <div className="glass rounded-xl p-8 text-center">
+                      <p className="text-muted-foreground text-sm">No friends in this group yet.</p>
+                    </div>
                   ) : (
                     <div className="space-y-2">
-                      {acceptedFriends.map((f) => (
+                      {getFilteredFriends(friendsGroupFilter).map((f) => (
                         <motion.div key={f.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                           className="glass rounded-xl px-4 py-3 flex items-center justify-between group">
                           <div className="flex items-center gap-3">
@@ -353,18 +394,25 @@ const Friends = () => {
                   <p className="text-muted-foreground">No friends yet. Add friends in the Friends tab to start comparing queues!</p>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {acceptedFriends.map((f) => (
-                    <button
-                      key={f.profile.user_id}
-                      onClick={() => setSelectedFriend(
-                        selectedFriend?.user_id === f.profile.user_id ? null : f.profile
-                      )}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                        selectedFriend?.user_id === f.profile.user_id
-                          ? "bg-primary text-primary-foreground shadow-md"
-                          : "glass hover:border-primary/50 text-foreground"
-                      }`}
+                <>
+                  <FriendGroups
+                    userId={user.id}
+                    friends={acceptedFriends}
+                    onFilterChange={(gid) => handleGroupFilterChange(gid, "linkup")}
+                    activeGroupFilter={linkUpGroupFilter}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {getFilteredFriends(linkUpGroupFilter).map((f) => (
+                      <button
+                        key={f.profile.user_id}
+                        onClick={() => setSelectedFriend(
+                          selectedFriend?.user_id === f.profile.user_id ? null : f.profile
+                        )}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                          selectedFriend?.user_id === f.profile.user_id
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "glass hover:border-primary/50 text-foreground"
+                        }`}
                     >
                       <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
                         selectedFriend?.user_id === f.profile.user_id
@@ -376,7 +424,8 @@ const Friends = () => {
                       {displayName(f.profile)}
                     </button>
                   ))}
-                </div>
+                  </div>
+                </>
               )}
             </div>
 
