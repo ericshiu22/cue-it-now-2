@@ -58,6 +58,7 @@ const Friends = () => {
   const [selectedFriend, setSelectedFriend] = useState<Profile | null>(null);
   const [sharedCues, setSharedCues] = useState<SharedCue[]>([]);
   const [linkUpLoading, setLinkUpLoading] = useState(false);
+  const [linkUpFilter, setLinkUpFilter] = useState<"all" | "common" | "unique">("all");
 
   // --- Friends logic ---
   const fetchFriendships = async () => {
@@ -382,16 +383,32 @@ const Friends = () => {
             {/* Shared Queue */}
             {selectedFriend && (
               <div>
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-3 mb-4">
                   <h2 className="text-lg font-bold text-foreground">
-                    Shared <span className="text-gradient">Queue</span> with {selectedFriend.username}
+                    {displayName(selectedFriend)}'s <span className="text-gradient">Queue</span>
                   </h2>
                   {!linkUpLoading && (
                     <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
-                      {sharedCues.length} in common
+                      {sharedCues.length} titles
                     </span>
                   )}
                 </div>
+
+                {/* Filter buttons */}
+                {!linkUpLoading && sharedCues.length > 0 && (
+                  <div className="flex gap-2 mb-5">
+                    {(["all", "common", "unique"] as const).map((f) => (
+                      <button key={f} onClick={() => setLinkUpFilter(f)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          linkUpFilter === f
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "glass text-muted-foreground hover:text-foreground"
+                        }`}>
+                        {f === "all" ? "All" : f === "common" ? "In Common" : "Not in My Queue"}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {linkUpLoading ? (
                   <div className="flex items-center justify-center h-48">
@@ -400,27 +417,46 @@ const Friends = () => {
                 ) : sharedCues.length === 0 ? (
                   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-12 text-center">
                     <Film className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-                    <h3 className="text-foreground font-semibold mb-1">No overlapping titles</h3>
+                    <h3 className="text-foreground font-semibold mb-1">No titles yet</h3>
                     <p className="text-muted-foreground text-sm">
-                      You and {selectedFriend.username || "your friend"} don't have any shows in common yet.
+                      {displayName(selectedFriend)} hasn't added anything to their queue yet.
                     </p>
                   </motion.div>
-                ) : (
+                ) : (() => {
+                  const filtered = sharedCues.filter((cue) => {
+                    if (linkUpFilter === "common") return !!cue.my_service;
+                    if (linkUpFilter === "unique") return !cue.my_service;
+                    return true;
+                  });
+                  if (filtered.length === 0) return (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass rounded-xl p-8 text-center">
+                      <p className="text-muted-foreground text-sm">
+                        {linkUpFilter === "common" ? "No overlapping titles with this friend." : "All of their titles are already in your queue!"}
+                      </p>
+                    </motion.div>
+                  );
+                  return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <AnimatePresence>
-                      {sharedCues.map((cue, i) => {
+                      {filtered.map((cue, i) => {
                         const poster = getImageUrl(cue.poster_path, "w300");
-                        const myLink = getDeepLink(cue.my_service, cue.title, cue.my_deep_link);
-                        const myService = getService(cue.my_service);
+                        const isInMyQueue = !!cue.my_service;
+                        const myLink = getDeepLink(cue.friend_service, cue.title, cue.friend_deep_link);
+                        const friendService = getService(cue.friend_service);
                         return (
                           <motion.div key={cue.tmdb_id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.04 }} className="glass rounded-xl overflow-hidden flex group">
-                            <div className="w-24 h-36 flex-shrink-0">
+                            <div className="w-24 h-36 flex-shrink-0 relative">
                               {poster ? (
                                 <img src={poster} alt={cue.title} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full bg-secondary flex items-center justify-center">
                                   {cue.media_type === "tv" ? <Tv className="h-6 w-6 text-muted-foreground" /> : <Film className="h-6 w-6 text-muted-foreground" />}
+                                </div>
+                              )}
+                              {isInMyQueue && (
+                                <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                                  IN COMMON
                                 </div>
                               )}
                             </div>
@@ -432,15 +468,15 @@ const Friends = () => {
                                   {cue.release_year && <span>· {cue.release_year}</span>}
                                   {cue.vote_average && <span>· ⭐ {Number(cue.vote_average).toFixed(1)}</span>}
                                 </div>
-                                {myService && (
+                                {friendService && (
                                   <div className="mt-1.5 text-xs text-muted-foreground">
-                                    <span>{myService.logo} {myService.name}</span>
+                                    <span>{friendService.logo} {friendService.name}</span>
                                   </div>
                                 )}
                               </div>
                               <a href={myLink} target="_blank" rel="noopener noreferrer"
                                 className="mt-2 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-gradient-brand text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity glow">
-                                <ExternalLink className="h-3 w-3" /> Watch Together
+                                <ExternalLink className="h-3 w-3" /> {isInMyQueue ? "Watch Together" : "Check It Out"}
                               </a>
                             </div>
                           </motion.div>
@@ -448,7 +484,8 @@ const Friends = () => {
                       })}
                     </AnimatePresence>
                   </div>
-                )}
+                  );
+                })()}
               </div>
             )}
           </TabsContent>
