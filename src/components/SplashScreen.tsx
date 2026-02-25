@@ -1,7 +1,13 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import cueLogo from "@/assets/cue-it-logo.png";
 
 const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 3500);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
   return (
     <motion.div
       className="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center"
@@ -41,15 +47,6 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
         >
           Check the Feed. Find your Flow. Cue It.
         </motion.p>
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.8, duration: 0.5 }}
-          onClick={onComplete}
-          className="mt-10 px-8 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
-        >
-          Enter
-        </motion.button>
       </div>
     </motion.div>
   );
