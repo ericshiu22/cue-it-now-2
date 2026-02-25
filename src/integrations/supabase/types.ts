@@ -253,6 +253,7 @@ export type Database = {
         Args: { _current_user_id: string; _query: string }
         Returns: {
           avatar_url: string
+          email: string
           user_id: string
           username: string
         }[]
