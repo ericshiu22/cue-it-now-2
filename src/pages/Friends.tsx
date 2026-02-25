@@ -74,11 +74,10 @@ const Friends = () => {
     const otherIds = data.map((f) => (f.user_id === user.id ? f.friend_id : f.user_id));
     let profilesMap: Record<string, Profile> = {};
     if (otherIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, username, avatar_url, email")
-        .in("user_id", otherIds);
-      if (profiles) profiles.forEach((p) => { profilesMap[p.user_id] = p as Profile; });
+      const { data: profiles } = await supabase.rpc("get_users_public_data" as any, {
+        _user_ids: otherIds,
+      });
+      if (profiles) (profiles as any[]).forEach((p: any) => { profilesMap[p.user_id] = p as Profile; });
     }
 
     const incoming: Friendship[] = [];
