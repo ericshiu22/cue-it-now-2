@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getRecommendations, getWatchProviders, getImageUrl, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
 import MovieCard from "./MovieCard";
-import { motion } from "framer-motion";
+import SectionHeader from "./SectionHeader";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface SourceShow {
@@ -163,16 +163,7 @@ const RecommendedForYou = () => {
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="mb-6"
-      >
-        <h2 className="text-xl font-semibold text-foreground">
-          Recommended for You
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-      </motion.div>
+      <SectionHeader title="Recommended for You" subtitle={subtitle} />
 
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-5 pb-4">

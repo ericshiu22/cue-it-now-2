@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import MovieCard from "./MovieCard";
-import { motion } from "framer-motion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Users } from "lucide-react";
 import type { TMDBResult } from "@/lib/tmdb";
+import SectionHeader from "./SectionHeader";
 
 interface FriendCue {
   tmdb_id: number;
@@ -64,19 +64,11 @@ const FriendsWatching = () => {
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="mb-6"
-      >
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold text-foreground">
-            Friends Are Watching
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-      </motion.div>
+      <SectionHeader
+        title="Friends Are Watching"
+        subtitle={subtitle}
+        icon={<Users className="h-5 w-5 text-primary" />}
+      />
 
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-5 pb-4">

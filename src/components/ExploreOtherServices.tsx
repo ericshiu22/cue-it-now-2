@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { getRecommendations, getWatchProviders, getImageUrl, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
 import MovieCard from "./MovieCard";
 import ServiceSwapModal from "./ServiceSwapModal";
-import { motion } from "framer-motion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ArrowRightLeft } from "lucide-react";
+import SectionHeader from "./SectionHeader";
 
 interface ExploreItem {
   item: TMDBResult;
@@ -128,15 +128,11 @@ const ExploreOtherServices = () => {
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-8">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
-        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <ArrowRightLeft className="h-5 w-5 text-accent-foreground" />
-          Explore Other Services
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Great picks you'd unlock with a different subscription
-        </p>
-      </motion.div>
+      <SectionHeader
+        title="Explore Other Services"
+        subtitle="Great picks you'd unlock with a different subscription"
+        icon={<ArrowRightLeft className="h-5 w-5 text-accent-foreground" />}
+      />
 
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-5 pb-4">
