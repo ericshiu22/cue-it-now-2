@@ -148,28 +148,22 @@ const Friends = () => {
 
     const fetchFriendQueue = async () => {
       setLinkUpLoading(true);
-      const { data: myCues } = await supabase.from("cues").select("*").eq("user_id", user.id);
-      const { data: friendCues } = await supabase.rpc("get_friends_cues" as any, { _user_id: user.id });
+      const [{ data: myCues }, { data: friendCues }] = await Promise.all([
+        supabase.from("cues").select("*").eq("user_id", user.id),
+        supabase.rpc("get_friend_all_cues" as any, { _user_id: user.id, _friend_id: selectedFriend.user_id }),
+      ]);
 
       if (friendCues) {
-        // Filter to only the selected friend's cues
-        const friendItems = (friendCues as any[]).filter((fc: any) => {
-          // get_friends_cues returns friend_username; match by selectedFriend
-          return true; // We'll use get_shared_cues but fetch ALL friend cues instead
+        const allFriendCues: SharedCue[] = (friendCues as any[]).map((fc: any) => {
+          const mine = myCues?.find((m) => m.tmdb_id === fc.tmdb_id);
+          return {
+            tmdb_id: fc.tmdb_id, title: fc.title, poster_path: fc.poster_path,
+            media_type: fc.media_type, release_year: fc.release_year,
+            vote_average: fc.vote_average, overview: fc.overview,
+            my_service: mine?.service_provider || "", my_deep_link: mine?.deep_link || null,
+            friend_service: fc.service_provider, friend_deep_link: fc.deep_link,
+          };
         });
-
-        const allFriendCues: SharedCue[] = (friendCues as any[])
-          .filter((fc: any) => fc.friend_username === (selectedFriend.username || selectedFriend.email))
-          .map((fc: any) => {
-            const mine = myCues?.find((m) => m.tmdb_id === fc.tmdb_id);
-            return {
-              tmdb_id: fc.tmdb_id, title: fc.title, poster_path: fc.poster_path,
-              media_type: fc.media_type, release_year: fc.release_year,
-              vote_average: fc.vote_average, overview: fc.overview,
-              my_service: mine?.service_provider || "", my_deep_link: mine?.deep_link || null,
-              friend_service: fc.service_provider, friend_deep_link: fc.deep_link,
-            };
-          });
         setSharedCues(allFriendCues);
       }
       setLinkUpLoading(false);
