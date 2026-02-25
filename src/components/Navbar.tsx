@@ -1,80 +1,18 @@
-import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ListVideo, LogOut, Search, Settings, User, Users, Wallet } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import cueLogo from "@/assets/cue-it-logo.png";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
   const location = useLocation();
-  const [showIntro, setShowIntro] = useState(false);
-  const introRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (introRef.current && !introRef.current.contains(e.target as Node)) {
-        setShowIntro(false);
-      }
-    };
-    if (showIntro) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showIntro]);
 
   return (
     <nav className="sticky top-0 z-50 glass-strong border-b border-border/50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="relative" ref={introRef}>
-          <button
-            onClick={() => setShowIntro((v) => !v)}
-            className="flex items-center focus:outline-none"
-          >
-            <img src={cueLogo} alt="Cue It" className="h-9 w-auto" />
-          </button>
-
-          <AnimatePresence>
-            {showIntro && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-0 bg-background/95 backdrop-blur-xl z-[100] flex flex-col items-center justify-center"
-              >
-                <button
-                  onClick={() => setShowIntro(false)}
-                  className="absolute top-5 right-6 text-muted-foreground hover:text-foreground text-2xl"
-                >
-                  ✕
-                </button>
-                <motion.img
-                  src={cueLogo}
-                  alt="Cue It"
-                  className="h-40 sm:h-56 w-auto"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6 }}
-                />
-                <motion.p
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25, duration: 0.5 }}
-                  className="mt-5 text-sm text-muted-foreground tracking-widest uppercase"
-                >
-                  Your Smart Streaming Assistant
-                </motion.p>
-                <motion.p
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.5 }}
-                  className="mt-3 text-lg text-muted-foreground leading-relaxed"
-                >
-                  Check the Feed. Find your Flow. Cue It.
-                </motion.p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <Link to="/" className="flex items-center">
+          <img src={cueLogo} alt="Cue It" className="h-9 w-auto" />
+        </Link>
 
         <div className="flex items-center gap-1">
           <Link
