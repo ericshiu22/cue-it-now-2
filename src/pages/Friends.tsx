@@ -177,19 +177,22 @@ const Friends = () => {
 
     const fetchFriendQueue = async () => {
       setLinkUpLoading(true);
-      const [{ data: myCues }, { data: friendCues }] = await Promise.all([
-        supabase.from("cues").select("*").eq("user_id", user.id),
+      const [{ data: friendCues }, { data: sharedData }] = await Promise.all([
         supabase.rpc("get_friend_all_cues" as any, { _user_id: user.id, _friend_id: selectedFriend.user_id }),
+        supabase.rpc("get_shared_cues" as any, { _user_id: user.id, _friend_id: selectedFriend.user_id }),
       ]);
 
       if (friendCues) {
+        const sharedTmdbIds = new Set(
+          (sharedData as any[] || []).map((s: any) => Number(s.tmdb_id))
+        );
         const allFriendCues: SharedCue[] = (friendCues as any[]).map((fc: any) => {
-          const mine = myCues?.find((m) => m.tmdb_id === fc.tmdb_id);
+          const isShared = sharedTmdbIds.has(Number(fc.tmdb_id));
           return {
             tmdb_id: fc.tmdb_id, title: fc.title, poster_path: fc.poster_path,
             media_type: fc.media_type, release_year: fc.release_year,
             vote_average: fc.vote_average, overview: fc.overview,
-            my_service: mine?.service_provider || "", my_deep_link: mine?.deep_link || null,
+            my_service: isShared ? "shared" : "", my_deep_link: null,
             friend_service: fc.service_provider, friend_deep_link: fc.deep_link,
           };
         });
