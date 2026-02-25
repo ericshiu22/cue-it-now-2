@@ -41,8 +41,8 @@ const Index = () => {
       )}
       {!searchQuery && (
         <>
-          <RecommendedForYou />
           <FriendsWatching />
+          <RecommendedForYou />
           <ExploreOtherServices />
           {trendingData && (
             <ResultsGrid results={trendingData.results} title="Trending This Week" />
