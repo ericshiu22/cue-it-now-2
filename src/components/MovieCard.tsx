@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl, getWatchProviders, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
 import { addCue } from "@/lib/cue-actions";
+import { mapProviderToServiceId } from "@/lib/streaming-services";
 
 interface MovieCardProps {
   item: TMDBResult;
@@ -11,25 +12,6 @@ interface MovieCardProps {
   hideProviderBadges?: boolean;
 }
 
-// Map TMDB provider names to our service IDs
-const mapProviderToServiceId = (name: string): string => {
-  const lower = name.toLowerCase().trim();
-  if (lower === "netflix") return "netflix";
-  if (lower === "max" || lower === "hbo max") return "max";
-  if (lower === "disney plus" || lower === "disney+") return "disney+";
-  if (lower === "hulu") return "hulu";
-  if (lower === "amazon prime video" || lower === "amazon prime video with ads" || lower === "prime video") return "prime video";
-  if (lower === "apple tv plus" || lower === "apple tv+") return "apple tv+";
-  if (lower === "peacock" || lower === "peacock premium" || lower === "peacock premium plus") return "peacock";
-  if (lower === "paramount+" || lower === "paramount plus") return "paramount";
-  if (lower === "crunchyroll") return "crunchyroll";
-  if (lower === "tubi" || lower === "tubi tv") return "tubi";
-  if (lower === "pluto tv") return "pluto";
-  if (lower === "discovery+" || lower === "discovery plus") return "discovery";
-  if (lower === "starz") return "starz";
-  if (lower === "mubi") return "mubi";
-  return "unassigned";
-};
 
 const MovieCard = ({ item, index, hideProviderBadges = false }: MovieCardProps) => {
   const navigate = useNavigate();

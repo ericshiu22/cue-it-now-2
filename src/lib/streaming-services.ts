@@ -141,3 +141,23 @@ export const getDeepLink = (serviceId: string, title: string, customLink?: strin
 };
 
 export const SERVICE_LIST = Object.values(STREAMING_SERVICES);
+
+/** Map a TMDB provider name to our internal service ID */
+export const mapProviderToServiceId = (name: string): string => {
+  const lower = name.toLowerCase().trim();
+  if (lower === "netflix") return "netflix";
+  if (lower === "max" || lower === "hbo max") return "max";
+  if (lower === "disney plus" || lower === "disney+") return "disney+";
+  if (lower === "hulu") return "hulu";
+  if (lower === "amazon prime video" || lower === "amazon prime video with ads" || lower === "prime video") return "prime video";
+  if (lower === "apple tv plus" || lower === "apple tv+") return "apple tv+";
+  if (lower === "peacock" || lower === "peacock premium" || lower === "peacock premium plus") return "peacock";
+  if (lower === "paramount+" || lower === "paramount plus") return "paramount";
+  if (lower === "crunchyroll") return "crunchyroll";
+  if (lower === "tubi" || lower === "tubi tv") return "tubi";
+  if (lower === "pluto tv") return "pluto";
+  if (lower === "discovery+" || lower === "discovery plus") return "discovery";
+  if (lower === "starz") return "starz";
+  if (lower === "mubi") return "mubi";
+  return "unassigned";
+};
