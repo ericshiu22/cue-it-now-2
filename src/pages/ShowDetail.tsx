@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Star, Calendar, Film, Tv, ExternalLink, Check } from "lucide-react";
 import { getImageUrl, getDetails, getWatchProviders, type WatchProvider } from "@/lib/tmdb";
 import { addCue } from "@/lib/cue-actions";
+import { mapProviderToServiceId } from "@/lib/streaming-services";
 
 interface ShowDetails {
   id: number;
@@ -182,6 +183,9 @@ const ShowDetail = () => {
               onClick={async () => {
                 if (cued || cueing) return;
                 setCueing(true);
+                const primaryService = streamProviders.length > 0
+                  ? mapProviderToServiceId(streamProviders[0].provider_name)
+                  : "unassigned";
                 const ok = await addCue({
                   tmdb_id: show.id,
                   title,
@@ -190,6 +194,7 @@ const ShowDetail = () => {
                   vote_average: show.vote_average,
                   release_year: year,
                   overview: show.overview,
+                  service_provider: primaryService,
                 });
                 setCueing(false);
                 if (ok) setCued(true);
