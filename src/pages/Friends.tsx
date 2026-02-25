@@ -13,7 +13,11 @@ interface Profile {
   user_id: string;
   username: string | null;
   avatar_url: string | null;
+  email: string | null;
 }
+
+const displayName = (p: Profile) => p.username || p.email || "Unknown";
+const displayInitial = (p: Profile) => (p.username || p.email || "?")[0].toUpperCase();
 
 interface Friendship {
   id: string;
@@ -72,9 +76,9 @@ const Friends = () => {
     if (otherIds.length > 0) {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, username, avatar_url")
+        .select("user_id, username, avatar_url, email")
         .in("user_id", otherIds);
-      if (profiles) profiles.forEach((p) => { profilesMap[p.user_id] = p; });
+      if (profiles) profiles.forEach((p) => { profilesMap[p.user_id] = p as Profile; });
     }
 
     const incoming: Friendship[] = [];
@@ -85,7 +89,7 @@ const Friends = () => {
       const otherId = f.user_id === user.id ? f.friend_id : f.user_id;
       const friendship: Friendship = {
         ...f,
-        profile: profilesMap[otherId] || { user_id: otherId, username: null, avatar_url: null },
+        profile: profilesMap[otherId] || { user_id: otherId, username: null, avatar_url: null, email: null },
       };
       if (f.status === "accepted") accepted.push(friendship);
       else if (f.status === "pending") {
@@ -226,9 +230,9 @@ const Friends = () => {
                       <div key={profile.user_id} className="flex items-center justify-between px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground text-sm font-bold">
-                            {(profile.username || "?")[0].toUpperCase()}
+                            {displayInitial(profile as Profile)}
                           </div>
-                          <span className="text-foreground font-medium text-sm">{profile.username || "Unknown"}</span>
+                          <span className="text-foreground font-medium text-sm">{displayName(profile as Profile)}</span>
                         </div>
                         <button onClick={() => sendRequest(profile.user_id)}
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold hover:bg-primary/25 transition-colors">
@@ -264,9 +268,9 @@ const Friends = () => {
                           className="glass rounded-xl px-4 py-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground text-sm font-bold">
-                              {(f.profile.username || "?")[0].toUpperCase()}
+                              {displayInitial(f.profile)}
                             </div>
-                            <span className="text-foreground font-medium text-sm">{f.profile.username || "Unknown"}</span>
+                            <span className="text-foreground font-medium text-sm">{displayName(f.profile)}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button onClick={() => respondToRequest(f.id, true)} className="p-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition-colors" title="Accept">
@@ -290,10 +294,10 @@ const Friends = () => {
                         <div key={f.id} className="glass rounded-xl px-4 py-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-sm font-bold">
-                              {(f.profile.username || "?")[0].toUpperCase()}
+                              {displayInitial(f.profile)}
                             </div>
                             <div>
-                              <span className="text-foreground font-medium text-sm">{f.profile.username || "Unknown"}</span>
+                              <span className="text-foreground font-medium text-sm">{displayName(f.profile)}</span>
                               <span className="block text-xs text-muted-foreground">Pending…</span>
                             </div>
                           </div>
@@ -319,9 +323,9 @@ const Friends = () => {
                           className="glass rounded-xl px-4 py-3 flex items-center justify-between group">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground text-sm font-bold">
-                              {(f.profile.username || "?")[0].toUpperCase()}
+                              {displayInitial(f.profile)}
                             </div>
-                            <span className="text-foreground font-medium text-sm">{f.profile.username || "Unknown"}</span>
+                            <span className="text-foreground font-medium text-sm">{displayName(f.profile)}</span>
                           </div>
                           <button onClick={() => removeFriend(f.id)}
                             className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100" title="Remove friend">
@@ -365,9 +369,9 @@ const Friends = () => {
                           ? "bg-primary-foreground/20 text-primary-foreground"
                           : "bg-gradient-brand text-primary-foreground"
                       }`}>
-                        {(f.profile.username || "?")[0].toUpperCase()}
+                        {displayInitial(f.profile)}
                       </div>
-                      {f.profile.username || "Unknown"}
+                      {displayName(f.profile)}
                     </button>
                   ))}
                 </div>
