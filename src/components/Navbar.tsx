@@ -26,12 +26,12 @@ const Navbar = () => {
             <p className="text-base font-bold text-foreground mb-3">Stop Searching. Start Streaming.</p>
             <DropdownMenuSeparator />
             <div className="flex items-start gap-2.5 py-2.5">
-              <Compass className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">Find Your Flow:</span> Locate any title across all platforms instantly.</p>
-            </div>
-            <div className="flex items-start gap-2.5 py-2.5">
               <Radio className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">Check the Feed:</span> See what the squad is binging right now.</p>
+            </div>
+            <div className="flex items-start gap-2.5 py-2.5">
+              <Compass className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">Find Your Flow:</span> Locate any title across all platforms instantly.</p>
             </div>
             <div className="flex items-start gap-2.5 py-2.5">
               <Play className="h-4 w-4 text-primary mt-0.5 shrink-0" />
