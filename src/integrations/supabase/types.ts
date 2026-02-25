@@ -249,6 +249,15 @@ export type Database = {
           vote_average: number
         }[]
       }
+      get_users_public_data: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          email: string
+          user_id: string
+          username: string
+        }[]
+      }
       search_users: {
         Args: { _current_user_id: string; _query: string }
         Returns: {
