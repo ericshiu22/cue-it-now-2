@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import HeroSection from "@/components/HeroSection";
 import SearchBar from "@/components/SearchBar";
 import ResultsGrid from "@/components/ResultsGrid";
@@ -8,8 +9,16 @@ import FriendsWatching from "@/components/FriendsWatching";
 import ExploreOtherServices from "@/components/ExploreOtherServices";
 import { searchMulti, getTrending } from "@/lib/tmdb";
 
+const INTRO_DURATION = 3500;
+
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [introComplete, setIntroComplete] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIntroComplete(true), INTRO_DURATION);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -33,22 +42,32 @@ const Index = () => {
         <SearchBar onSearch={handleSearch} isLoading={searchLoading} />
       </HeroSection>
 
-      {searchData && (
-        <ResultsGrid
-          results={searchData.results}
-          title={`Results for "${searchQuery}"`}
-        />
-      )}
-      {!searchQuery && (
-        <>
-          <RecommendedForYou />
-          <FriendsWatching />
-          <ExploreOtherServices />
-          {trendingData && (
-            <ResultsGrid results={trendingData.results} title="Trending This Week" />
-          )}
-        </>
-      )}
+      <AnimatePresence>
+        {introComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            {searchData && (
+              <ResultsGrid
+                results={searchData.results}
+                title={`Results for "${searchQuery}"`}
+              />
+            )}
+            {!searchQuery && (
+              <>
+                <RecommendedForYou />
+                <FriendsWatching />
+                <ExploreOtherServices />
+                {trendingData && (
+                  <ResultsGrid results={trendingData.results} title="Trending This Week" />
+                )}
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
