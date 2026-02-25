@@ -277,11 +277,10 @@ const SubscriptionHub = () => {
           {healthItems.length > 0 && (() => {
             const pieData = healthItems
               .filter((h) => h.cueCount > 0)
-                          .map((h) => {
+              .map((h) => {
                 const info = getService(h.serviceId);
                 return {
                   name: info?.name || h.serviceName,
-                  logoUrl: info?.logoUrl || "",
                   value: h.cueCount,
                   color: info?.color || "hsl(var(--muted))",
                 };
@@ -316,29 +315,22 @@ const SubscriptionHub = () => {
                           animationEasing="ease-out"
                           dataKey="value"
                           strokeWidth={0}
-                          label={({ cx, cy, midAngle, outerRadius: or, value, logoUrl }) => {
+                          label={({ cx, cy, midAngle, outerRadius: or, name, value }) => {
                             const RADIAN = Math.PI / 180;
-                            const radius = or + 28;
+                            const radius = or + 22;
                             const x = cx + radius * Math.cos(-midAngle * RADIAN);
                             const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                            const imgSize = 20;
                             return (
-                              <foreignObject
-                                x={x - imgSize / 2 - (x > cx ? -12 : 12)}
-                                y={y - imgSize / 2}
-                                width={imgSize + 30}
-                                height={imgSize + 4}
-                                style={{ overflow: "visible" }}
+                              <text
+                                x={x}
+                                y={y}
+                                textAnchor={x > cx ? "start" : "end"}
+                                dominantBaseline="central"
+                                className="fill-foreground"
+                                style={{ fontSize: "11px", fontWeight: 500 }}
                               >
-                                <div style={{ display: "flex", alignItems: "center", gap: "4px", flexDirection: x > cx ? "row" : "row-reverse" }}>
-                                  <img
-                                    src={logoUrl}
-                                    alt=""
-                                    style={{ width: imgSize, height: imgSize, borderRadius: 4, objectFit: "contain", background: "white" }}
-                                  />
-                                  <span style={{ fontSize: "11px", fontWeight: 600, color: "hsl(var(--foreground))" }}>{value}</span>
-                                </div>
-                              </foreignObject>
+                                {name} ({value})
+                              </text>
                             );
                           }}
                           labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
