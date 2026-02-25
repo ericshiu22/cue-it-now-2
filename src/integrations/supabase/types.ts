@@ -143,6 +143,7 @@ export type Database = {
           avatar_url: string | null
           churn_alerts_enabled: boolean
           created_at: string
+          email: string | null
           email_enabled: boolean
           id: string
           push_enabled: boolean
@@ -155,6 +156,7 @@ export type Database = {
           avatar_url?: string | null
           churn_alerts_enabled?: boolean
           created_at?: string
+          email?: string | null
           email_enabled?: boolean
           id?: string
           push_enabled?: boolean
@@ -167,6 +169,7 @@ export type Database = {
           avatar_url?: string | null
           churn_alerts_enabled?: boolean
           created_at?: string
+          email?: string | null
           email_enabled?: boolean
           id?: string
           push_enabled?: boolean
