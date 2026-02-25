@@ -35,38 +35,42 @@ const Navbar = () => {
           <AnimatePresence>
             {showIntro && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="absolute left-0 top-full mt-2 w-72 rounded-xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-5 z-50"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 bg-background/95 backdrop-blur-xl z-[100] flex flex-col items-center justify-center"
               >
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <motion.img
-                    src={cueLogo}
-                    alt="Cue It"
-                    className="h-20 w-auto"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                  />
-                  <motion.p
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.4 }}
-                    className="text-xs text-muted-foreground tracking-widest uppercase"
-                  >
-                    Your Smart Streaming Assistant
-                  </motion.p>
-                  <motion.p
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.4 }}
-                    className="text-sm text-muted-foreground leading-relaxed"
-                  >
-                    Check the Feed. Find your Flow. Cue It.
-                  </motion.p>
-                </div>
+                <button
+                  onClick={() => setShowIntro(false)}
+                  className="absolute top-5 right-6 text-muted-foreground hover:text-foreground text-2xl"
+                >
+                  ✕
+                </button>
+                <motion.img
+                  src={cueLogo}
+                  alt="Cue It"
+                  className="h-40 sm:h-56 w-auto"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6 }}
+                />
+                <motion.p
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25, duration: 0.5 }}
+                  className="mt-5 text-sm text-muted-foreground tracking-widest uppercase"
+                >
+                  Your Smart Streaming Assistant
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  className="mt-3 text-lg text-muted-foreground leading-relaxed"
+                >
+                  Check the Feed. Find your Flow. Cue It.
+                </motion.p>
               </motion.div>
             )}
           </AnimatePresence>
