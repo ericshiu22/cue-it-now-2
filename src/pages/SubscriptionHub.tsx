@@ -277,10 +277,11 @@ const SubscriptionHub = () => {
           {healthItems.length > 0 && (() => {
             const pieData = healthItems
               .filter((h) => h.cueCount > 0)
-              .map((h) => {
+                          .map((h) => {
                 const info = getService(h.serviceId);
                 return {
                   name: info?.name || h.serviceName,
+                  logo: info?.logo || "📺",
                   value: h.cueCount,
                   color: info?.color || "hsl(var(--muted))",
                 };
@@ -315,7 +316,7 @@ const SubscriptionHub = () => {
                           animationEasing="ease-out"
                           dataKey="value"
                           strokeWidth={0}
-                          label={({ cx, cy, midAngle, outerRadius: or, name, value }) => {
+                          label={({ cx, cy, midAngle, outerRadius: or, name, value, logo }) => {
                             const RADIAN = Math.PI / 180;
                             const radius = or + 22;
                             const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -327,9 +328,9 @@ const SubscriptionHub = () => {
                                 textAnchor={x > cx ? "start" : "end"}
                                 dominantBaseline="central"
                                 className="fill-foreground"
-                                style={{ fontSize: "11px", fontWeight: 500 }}
+                                style={{ fontSize: "13px" }}
                               >
-                                {name} ({value})
+                                {logo} {value}
                               </text>
                             );
                           }}
