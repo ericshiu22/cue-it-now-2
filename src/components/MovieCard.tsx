@@ -13,16 +13,22 @@ interface MovieCardProps {
 
 // Map TMDB provider names to our service IDs
 const mapProviderToServiceId = (name: string): string => {
-  const lower = name.toLowerCase();
-  if (lower.includes("netflix")) return "netflix";
-  if (lower.includes("max") && !lower.includes("paramount")) return "max";
-  if (lower.includes("disney")) return "disney+";
-  if (lower.includes("hulu")) return "hulu";
-  if (lower.includes("prime") || lower.includes("amazon")) return "prime video";
-  if (lower.includes("apple")) return "apple tv+";
-  if (lower.includes("peacock")) return "peacock";
-  if (lower.includes("paramount")) return "paramount";
-  return lower;
+  const lower = name.toLowerCase().trim();
+  if (lower === "netflix") return "netflix";
+  if (lower === "max" || lower === "hbo max") return "max";
+  if (lower === "disney plus" || lower === "disney+") return "disney+";
+  if (lower === "hulu") return "hulu";
+  if (lower === "amazon prime video" || lower === "amazon prime video with ads" || lower === "prime video") return "prime video";
+  if (lower === "apple tv plus" || lower === "apple tv+") return "apple tv+";
+  if (lower === "peacock" || lower === "peacock premium" || lower === "peacock premium plus") return "peacock";
+  if (lower === "paramount+" || lower === "paramount plus") return "paramount";
+  if (lower === "crunchyroll") return "crunchyroll";
+  if (lower === "tubi" || lower === "tubi tv") return "tubi";
+  if (lower === "pluto tv") return "pluto";
+  if (lower === "discovery+" || lower === "discovery plus") return "discovery";
+  if (lower === "starz") return "starz";
+  if (lower === "mubi") return "mubi";
+  return "unassigned";
 };
 
 const MovieCard = ({ item, index, hideProviderBadges = false }: MovieCardProps) => {
