@@ -90,21 +90,28 @@ const FriendsWatching = () => {
 
             return (
               <div key={cue.tmdb_id} className="w-[160px] sm:w-[180px] shrink-0">
-                <MovieCard item={asResult} index={i} hideProviderBadges />
-                <div className="mt-1.5 flex items-center gap-1.5">
+                <div className="relative">
+                  <MovieCard item={asResult} index={i} hideProviderBadges />
                   {(() => {
                     const svc = getService(cue.service_provider);
                     return svc ? (
-                      <span className="text-sm shrink-0" title={svc.name}>{svc.logo}</span>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <div className="h-5 w-5 rounded-md overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                          <span className="text-sm">{svc.logo}</span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                          {svc.name}
+                        </span>
+                      </div>
                     ) : null;
                   })()}
                   {cue.friend_username && (
-                    <>
-                      <Users className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="text-[10px] text-muted-foreground truncate leading-tight">
                         {cue.friend_username}
                       </span>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
