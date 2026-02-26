@@ -6,6 +6,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Users } from "lucide-react";
 import type { TMDBResult } from "@/lib/tmdb";
 import SectionHeader from "./SectionHeader";
+import { getService } from "@/lib/streaming-services";
 
 interface FriendCue {
   tmdb_id: number;
@@ -90,14 +91,22 @@ const FriendsWatching = () => {
             return (
               <div key={cue.tmdb_id} className="w-[160px] sm:w-[180px] shrink-0">
                 <MovieCard item={asResult} index={i} hideProviderBadges />
-                {cue.friend_username && (
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-[10px] text-muted-foreground truncate leading-tight">
-                      {cue.friend_username}
-                    </span>
-                  </div>
-                )}
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  {(() => {
+                    const svc = getService(cue.service_provider);
+                    return svc ? (
+                      <span className="text-sm shrink-0" title={svc.name}>{svc.logo}</span>
+                    ) : null;
+                  })()}
+                  {cue.friend_username && (
+                    <>
+                      <Users className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                        {cue.friend_username}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             );
           })}
