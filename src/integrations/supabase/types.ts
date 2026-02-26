@@ -232,6 +232,39 @@ export type Database = {
         }
         Relationships: []
       }
+      service_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          password: string | null
+          service_name: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          password?: string | null
+          service_name: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          password?: string | null
+          service_name?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       service_swaps: {
         Row: {
           created_at: string
