@@ -14,6 +14,7 @@ import { getImageUrl } from "@/lib/tmdb";
 import { formatDistanceToNow } from "date-fns";
 import SubscriptionHealth, { type ServiceHealth } from "@/components/SubscriptionHealth";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import PasswordManager from "@/components/PasswordManager";
 import { Progress } from "@/components/ui/progress";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -359,6 +360,9 @@ const SubscriptionHub = () => {
             );
           })()}
         </div>
+
+        {/* ── Password Manager ── */}
+        <PasswordManager />
 
         {/* ── Swap History (full width) ── */}
         {swaps.length > 0 && (
