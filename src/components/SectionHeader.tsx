@@ -14,14 +14,14 @@ const SectionHeader = ({ title, subtitle, icon }: SectionHeaderProps) => (
     <div className="flex items-center gap-2">
       {icon}
       <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-      <Tooltip>
+      <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <button type="button" className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <Info className="h-4 w-4" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right" className="max-w-[240px] text-xs">
-          {subtitle}
+        <TooltipContent side="right" className="max-w-[240px] text-xs z-[100]">
+          <p>{subtitle}</p>
         </TooltipContent>
       </Tooltip>
     </div>
