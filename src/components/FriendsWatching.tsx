@@ -6,7 +6,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Users } from "lucide-react";
 import type { TMDBResult, WatchProvider } from "@/lib/tmdb";
 import { getWatchProviders, getImageUrl } from "@/lib/tmdb";
-import { mapProviderToServiceId } from "@/lib/streaming-services";
+import { mapProviderToServiceId, getService } from "@/lib/streaming-services";
 import SectionHeader from "./SectionHeader";
 
 interface FriendCue {
@@ -60,12 +60,15 @@ const FriendsWatching = () => {
                 cue.tmdb_id
               );
               if (providers) {
-                const flatrate = [
+                const allProviders = [
                   ...(providers.flatrate || []),
                   ...(providers.ads || []),
+                  ...(providers.free || []),
+                  ...(providers.buy || []),
+                  ...(providers.rent || []),
                 ];
                 const serviceId = cue.service_provider.toLowerCase();
-                const matched = flatrate.find(
+                const matched = allProviders.find(
                   (p) => mapProviderToServiceId(p.provider_name) === serviceId
                 );
                 return { cue, provider: matched || null };
@@ -127,7 +130,7 @@ const FriendsWatching = () => {
               <div key={cue.tmdb_id} className="w-[160px] sm:w-[180px] shrink-0">
                 <div className="relative">
                   <MovieCard item={asResult} index={i} hideProviderBadges />
-                  {provider && (
+                  {provider ? (
                     <div className="mt-1 flex items-center gap-1.5">
                       <div className="h-5 w-5 rounded-md overflow-hidden shrink-0 shadow-sm">
                         <img
@@ -140,7 +143,17 @@ const FriendsWatching = () => {
                         {provider.provider_name}
                       </span>
                     </div>
-                  )}
+                  ) : (() => {
+                    const svc = getService(cue.service_provider);
+                    return svc ? (
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="text-sm shrink-0" title={svc.name}>{svc.logo}</span>
+                        <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                          {svc.name}
+                        </span>
+                      </div>
+                    ) : null;
+                  })()}
                   {cue.friend_username && (
                     <div className="mt-1 flex items-center gap-1.5">
                       <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

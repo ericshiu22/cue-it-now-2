@@ -32,6 +32,7 @@ export interface WatchProvidersResult {
   buy?: WatchProvider[];
   rent?: WatchProvider[];
   ads?: WatchProvider[];
+  free?: WatchProvider[];
 }
 
 export interface TMDBSearchResponse {
