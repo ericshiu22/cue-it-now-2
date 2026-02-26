@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import MovieCard from "./MovieCard";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Users } from "lucide-react";
-import type { TMDBResult } from "@/lib/tmdb";
+import type { TMDBResult, WatchProvider } from "@/lib/tmdb";
+import { getWatchProviders, getImageUrl } from "@/lib/tmdb";
+import { mapProviderToServiceId } from "@/lib/streaming-services";
 import SectionHeader from "./SectionHeader";
-import { getService } from "@/lib/streaming-services";
 
 interface FriendCue {
   tmdb_id: number;
@@ -21,9 +22,14 @@ interface FriendCue {
   friend_username: string | null;
 }
 
+interface EnrichedCue {
+  cue: FriendCue;
+  provider: WatchProvider | null;
+}
+
 const FriendsWatching = () => {
   const { user } = useAuth();
-  const [items, setItems] = useState<FriendCue[]>([]);
+  const [items, setItems] = useState<EnrichedCue[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +38,7 @@ const FriendsWatching = () => {
       return;
     }
 
-    const fetch = async () => {
+    const fetchData = async () => {
       try {
         const { data, error } = await supabase.rpc("get_friends_cues", {
           _user_id: user.id,
@@ -43,7 +49,35 @@ const FriendsWatching = () => {
           return;
         }
 
-        setItems((data as FriendCue[]) || []);
+        const cues = (data as FriendCue[]) || [];
+
+        // Fetch TMDB watch providers to get real logos
+        const enriched = await Promise.all(
+          cues.map(async (cue) => {
+            try {
+              const providers = await getWatchProviders(
+                cue.media_type as "movie" | "tv",
+                cue.tmdb_id
+              );
+              if (providers) {
+                const flatrate = [
+                  ...(providers.flatrate || []),
+                  ...(providers.ads || []),
+                ];
+                const serviceId = cue.service_provider.toLowerCase();
+                const matched = flatrate.find(
+                  (p) => mapProviderToServiceId(p.provider_name) === serviceId
+                );
+                return { cue, provider: matched || null };
+              }
+            } catch {
+              // ignore per-item errors
+            }
+            return { cue, provider: null };
+          })
+        );
+
+        setItems(enriched);
       } catch (err) {
         console.error("Failed to fetch friends cues:", err);
       } finally {
@@ -51,13 +85,14 @@ const FriendsWatching = () => {
       }
     };
 
-    fetch();
+    fetchData();
   }, [user]);
 
   if (loading || !user || items.length === 0) return null;
 
-  // Collect unique friend names for subtitle
-  const friendNames = [...new Set(items.map((i) => i.friend_username).filter(Boolean))];
+  const friendNames = [
+    ...new Set(items.map((i) => i.cue.friend_username).filter(Boolean)),
+  ];
   const subtitle =
     friendNames.length > 0
       ? `From ${friendNames.slice(0, 3).join(", ")}${friendNames.length > 3 ? ` and ${friendNames.length - 3} more` : ""}'s watchlists`
@@ -73,7 +108,7 @@ const FriendsWatching = () => {
 
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-5 pb-4">
-          {items.map((cue, i) => {
+          {items.map(({ cue, provider }, i) => {
             const asResult: TMDBResult = {
               id: cue.tmdb_id,
               title: cue.title,
@@ -92,19 +127,20 @@ const FriendsWatching = () => {
               <div key={cue.tmdb_id} className="w-[160px] sm:w-[180px] shrink-0">
                 <div className="relative">
                   <MovieCard item={asResult} index={i} hideProviderBadges />
-                  {(() => {
-                    const svc = getService(cue.service_provider);
-                    return svc ? (
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <div className="h-5 w-5 rounded-md overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
-                          <span className="text-sm">{svc.logo}</span>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground truncate leading-tight">
-                          {svc.name}
-                        </span>
+                  {provider && (
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <div className="h-5 w-5 rounded-md overflow-hidden shrink-0 shadow-sm">
+                        <img
+                          src={getImageUrl(provider.logo_path, "w200") || ""}
+                          alt={provider.provider_name}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
-                    ) : null;
-                  })()}
+                      <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                        {provider.provider_name}
+                      </span>
+                    </div>
+                  )}
                   {cue.friend_username && (
                     <div className="mt-1 flex items-center gap-1.5">
                       <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
