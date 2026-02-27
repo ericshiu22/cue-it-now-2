@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { ListVideo, LogOut, Search, Settings, User, Users, Wallet, Compass, Radio, Play } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import cueLogo from "@/assets/cue-it-logo.png";
 import {
@@ -97,6 +98,7 @@ const Navbar = () => {
 
           {user ? (
             <>
+              <NotificationBell />
               <Link
                 to="/profile"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${

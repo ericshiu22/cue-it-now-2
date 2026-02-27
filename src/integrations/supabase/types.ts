@@ -190,6 +190,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          alert_type: string
+          body: string
+          created_at: string
+          id: string
+          is_read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          body: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           alert_level: string
