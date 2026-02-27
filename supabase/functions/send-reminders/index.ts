@@ -9,10 +9,53 @@ const corsHeaders = {
 interface QueuedNotification {
   id: string;
   user_id: string;
-  alert_type: string; // e.g. "subscription_expiry", "new_release", "friend_activity", "trending", "price_drop"
+  alert_type: string;
   title: string;
   body: string;
   created_at: string;
+}
+
+async function sendEmailViaResend(
+  to: string,
+  subject: string,
+  body: string
+): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("[EMAIL] RESEND_API_KEY not configured, skipping email");
+    return false;
+  }
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Cue It <notifications@resend.dev>",
+        to: [to],
+        subject,
+        html: `<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:24px;">
+          <h2 style="color:#1a1a2e;margin-bottom:8px;">${subject}</h2>
+          <p style="color:#555;line-height:1.6;">${body}</p>
+          <hr style="border:none;border-top:1px solid #eee;margin:24px 0;" />
+          <p style="color:#999;font-size:12px;">Sent by Cue It • Manage preferences in your profile settings</p>
+        </div>`,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      console.error("[EMAIL] Resend error:", data);
+      return false;
+    }
+    console.log("[EMAIL] Sent to", to, "id:", data.id);
+    return true;
+  } catch (err) {
+    console.error("[EMAIL] Failed:", err);
+    return false;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -25,9 +68,6 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // 1. Fetch all pending notifications (from a hypothetical notification_queue table)
-    //    For now we accept them via the request body so the function can be tested
-    //    and later wired to a cron job + queue table.
     let notifications: QueuedNotification[] = [];
 
     const contentType = req.headers.get("content-type") || "";
@@ -43,11 +83,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 2. Collect unique user IDs and fetch their profiles
+    // Fetch profiles for filtering
     const userIds = [...new Set(notifications.map((n) => n.user_id))];
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("user_id, alert_level, email_enabled, push_enabled, churn_alerts_enabled")
+      .select("user_id, alert_level, email_enabled, push_enabled, churn_alerts_enabled, email")
       .in("user_id", userIds);
 
     if (profilesError) {
@@ -58,11 +98,10 @@ Deno.serve(async (req) => {
       (profiles ?? []).map((p: any) => [p.user_id, p])
     );
 
-    // 3. Filter notifications based on each user's alert_level
     const now = new Date();
     let sent = 0;
     let skipped = 0;
-    const results: { id: string; status: string; reason?: string }[] = [];
+    const results: { id: string; status: string; reason?: string; channels?: string[] }[] = [];
 
     for (const notif of notifications) {
       const profile = profileMap.get(notif.user_id);
@@ -79,7 +118,6 @@ Deno.serve(async (req) => {
 
       switch (alertLevel) {
         case "minimalist":
-          // Only allow subscription_expiry alerts
           if (notif.alert_type === "subscription_expiry") {
             allowed = true;
           } else {
@@ -88,13 +126,9 @@ Deno.serve(async (req) => {
           break;
 
         case "balanced": {
-          // Allow at most once every 7 days per user
-          // We check the notification's created_at against a 7-day window
           const createdAt = new Date(notif.created_at);
           const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           if (createdAt >= sevenDaysAgo) {
-            // Check if we've already sent to this user in this batch
-            // In production you'd check a last_notified_at column; here we allow the first per user
             const alreadySentToUser = results.some(
               (r) =>
                 r.status === "sent" &&
@@ -112,32 +146,45 @@ Deno.serve(async (req) => {
         }
 
         case "command_center":
-          // All notifications pass through
           allowed = true;
           break;
 
         default:
-          // Fallback: treat as balanced, allow
           allowed = true;
           break;
       }
 
-      // Check channel preferences
-      if (allowed) {
-        if (!profile.email_enabled && !profile.push_enabled) {
-          allowed = false;
-          reason = "all_channels_disabled";
-        }
+      if (allowed && !profile.email_enabled && !profile.push_enabled) {
+        allowed = false;
+        reason = "all_channels_disabled";
       }
 
       if (allowed) {
-        // ── Dispatch the notification ──
-        // In production, integrate with an email service (Resend, SendGrid, etc.)
-        // and/or push notification provider here.
+        const channels: string[] = [];
+
+        // ── Store in-app notification ──
+        await supabase.from("notifications").insert({
+          user_id: notif.user_id,
+          alert_type: notif.alert_type,
+          title: notif.title,
+          body: notif.body,
+        });
+        channels.push("in_app");
+
+        // ── Send email via Resend ──
+        if (profile.email_enabled && profile.email) {
+          const emailSent = await sendEmailViaResend(
+            profile.email,
+            notif.title,
+            notif.body
+          );
+          if (emailSent) channels.push("email");
+        }
+
         console.log(
-          `[SEND] user=${notif.user_id} type=${notif.alert_type} title="${notif.title}" email=${profile.email_enabled} push=${profile.push_enabled}`
+          `[SEND] user=${notif.user_id} type=${notif.alert_type} channels=${channels.join(",")}`
         );
-        results.push({ id: notif.id, status: "sent" });
+        results.push({ id: notif.id, status: "sent", channels });
         sent++;
       } else {
         console.log(
