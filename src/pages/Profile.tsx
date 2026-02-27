@@ -63,6 +63,7 @@ const Profile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
+  const [savedUsername, setSavedUsername] = useState("");
   const [loading, setLoading] = useState(true);
 
   /* ── Notification state ── */
@@ -82,6 +83,7 @@ const Profile = () => {
         .single() as any);
       if (data) {
         setUsername(data.username || "");
+        setSavedUsername(data.username || "");
         setAlertLevel(data.alert_level || "balanced");
         setEmailEnabled(data.email_enabled ?? true);
         setPushEnabled(data.push_enabled ?? true);
@@ -116,6 +118,7 @@ const Profile = () => {
     }
     await syncToDb({ username: trimmed });
     setUsername(trimmed);
+    setSavedUsername(trimmed);
   };
 
   if (!user) { navigate("/auth"); return null; }
@@ -151,23 +154,26 @@ const Profile = () => {
                   <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              {username && (
-                <p className="text-sm text-muted-foreground">Username: <span className="text-foreground font-medium">@{username}</span></p>
+              {savedUsername ? (
+                <p className="text-sm text-muted-foreground">Username: <span className="text-foreground font-medium">@{savedUsername}</span></p>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Choose a username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      maxLength={30}
+                      className="max-w-xs"
+                    />
+                    <Button size="sm" onClick={handleSaveUsername} disabled={saving}>
+                      <Check className="h-4 w-4 mr-1" />
+                      Save
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Letters, numbers, and underscores only. Friends can find you by username or email.</p>
+                </>
               )}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Choose a username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  maxLength={30}
-                  className="max-w-xs"
-                />
-                <Button size="sm" onClick={handleSaveUsername} disabled={saving}>
-                  <Check className="h-4 w-4 mr-1" />
-                  Save
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">Letters, numbers, and underscores only. Friends can find you by username or email.</p>
             </section>
 
             {/* Link to Subscription Hub */}
