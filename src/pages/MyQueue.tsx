@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Trash2, Film, Tv, ChevronDown } from "lucide-react";
+import { ExternalLink, Trash2, Film, Tv, ChevronDown, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl } from "@/lib/tmdb";
@@ -86,16 +86,88 @@ const ServicePicker = ({
   );
 };
 
+const BUY_RENT_OPTIONS = [
+  {
+    id: "prime video",
+    name: "Amazon Prime Video",
+    logo: "🟦",
+    searchUrl: (title: string) => `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=instant-video`,
+  },
+  {
+    id: "apple tv+",
+    name: "Apple TV+",
+    logo: "⚪",
+    searchUrl: (title: string) => `https://tv.apple.com/search?term=${encodeURIComponent(title)}`,
+  },
+];
+
+const BuyRentPicker = ({ title }: { title: string }) => {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  const handleOpen = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setOpen(!open);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        ref={triggerRef}
+        onClick={handleOpen}
+        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium bg-secondary border border-border hover:border-primary/50 transition-colors"
+      >
+        <ShoppingCart className="h-3 w-3 text-muted-foreground" />
+        <span className="text-foreground">Buy or Rent</span>
+        <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open &&
+        ReactDOM.createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+            <div
+              style={{ top: menuPos.top, left: menuPos.left }}
+              className="fixed z-[9999] rounded-lg py-1 min-w-[180px] shadow-xl border border-border bg-popover"
+            >
+              {BUY_RENT_OPTIONS.map((opt) => (
+                <a
+                  key={opt.id}
+                  href={opt.searchUrl(title)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-popover-foreground hover:bg-accent transition-colors"
+                >
+                  <span>{opt.logo}</span>
+                  <span className="flex-1">{opt.name}</span>
+                  <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                </a>
+              ))}
+            </div>
+          </>,
+          document.body
+        )}
+    </div>
+  );
+};
+
 const CueCard = ({
   cue,
   index,
   onRemove,
   onUpdateService,
+  isBuyRent = false,
 }: {
   cue: Cue;
   index: number;
   onRemove: (id: string) => void;
   onUpdateService: (id: string, serviceId: string) => void;
+  isBuyRent?: boolean;
 }) => {
   const poster = getImageUrl(cue.poster_path, "w300");
   const link = getDeepLink(cue.service_provider, cue.title, cue.deep_link);
@@ -129,14 +201,18 @@ const CueCard = ({
             {cue.release_year && <span>· {cue.release_year}</span>}
           </div>
           <div className="mt-1.5">
-            <ServicePicker
-              current={cue.service_provider}
-              onSelect={(serviceId) => onUpdateService(cue.id, serviceId)}
-            />
+            {isBuyRent ? (
+              <BuyRentPicker title={cue.title} />
+            ) : (
+              <ServicePicker
+                current={cue.service_provider}
+                onSelect={(serviceId) => onUpdateService(cue.id, serviceId)}
+              />
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 mt-2">
-          {cue.service_provider !== "unassigned" && (
+          {!isBuyRent && cue.service_provider !== "unassigned" && (
             <a
               href={link}
               target="_blank"
@@ -360,7 +436,7 @@ const MyQueue = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {buyRentCues.map((cue, i) => (
-                      <CueCard key={cue.id} cue={cue} index={i} onRemove={removeCue} onUpdateService={updateService} />
+                      <CueCard key={cue.id} cue={cue} index={i} onRemove={removeCue} onUpdateService={updateService} isBuyRent />
                     ))}
                   </div>
                 </motion.section>
