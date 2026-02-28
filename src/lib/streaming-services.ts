@@ -128,6 +128,14 @@ export const STREAMING_SERVICES: Record<string, StreamingService> = {
     searchUrl: (title) => `https://mubi.com/search?query=${encodeURIComponent(title)}`,
     cancelUrl: "https://mubi.com/account",
   },
+  "amc+": {
+    id: "amc+",
+    name: "AMC+",
+    color: "hsl(210, 70%, 35%)",
+    logo: "📺",
+    searchUrl: (title) => `https://www.amcplus.com/search?q=${encodeURIComponent(title)}`,
+    cancelUrl: "https://www.amcplus.com/account",
+  },
 };
 
 export const getService = (id: string): StreamingService | undefined => {
@@ -159,5 +167,6 @@ export const mapProviderToServiceId = (name: string): string => {
   if (lower === "discovery+" || lower === "discovery plus") return "discovery";
   if (lower === "starz") return "starz";
   if (lower === "mubi") return "mubi";
+  if (lower === "amc+" || lower === "amc plus" || lower === "amc+ amazon channel") return "amc+";
   return "unassigned";
 };
