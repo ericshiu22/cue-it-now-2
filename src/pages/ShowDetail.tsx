@@ -183,9 +183,11 @@ const ShowDetail = () => {
               onClick={async () => {
                 if (cued || cueing) return;
                 setCueing(true);
-                const primaryService = streamProviders.length > 0
-                  ? mapProviderToServiceId(streamProviders[0].provider_name)
-                  : "unassigned";
+                let primaryService = "unassigned";
+                for (const p of streamProviders) {
+                  const mapped = mapProviderToServiceId(p.provider_name);
+                  if (mapped !== "unassigned") { primaryService = mapped; break; }
+                }
                 const ok = await addCue({
                   tmdb_id: show.id,
                   title,
