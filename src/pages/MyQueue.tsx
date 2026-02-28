@@ -32,8 +32,9 @@ const ServicePicker = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const service = getService(current);
-  const label = service?.name || (current === "unassigned" ? "Assign Service" : current);
-  const logo = service?.logo || "📺";
+  const isUnknownService = !service && current !== "unassigned";
+  const label = service?.name || (current === "unassigned" ? "Assign Service" : current.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+  const logo = service?.logo || (isUnknownService ? "📺" : "📺");
 
   const handleOpen = () => {
     if (triggerRef.current) {
@@ -352,6 +353,7 @@ const MyQueue = () => {
               {/* Active service groups */}
               {activeGrouped.map(([provider, items]) => {
                 const service = getService(provider);
+                const displayName = service?.name || provider.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 return (
                   <motion.section
                     key={provider}
@@ -362,7 +364,7 @@ const MyQueue = () => {
                     <div className="flex items-center gap-3 mb-5">
                       <span className="text-2xl">{service?.logo || "📺"}</span>
                       <h2 className="text-lg font-bold text-foreground">
-                        {service?.name || provider}
+                        {displayName}
                       </h2>
                       <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
                         {items.length}
@@ -396,12 +398,13 @@ const MyQueue = () => {
                   <div className="space-y-8">
                     {inactiveGrouped.map(([provider, items]) => {
                       const service = getService(provider);
+                      const displayName = service?.name || provider.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                       return (
                         <div key={provider}>
                           <div className="flex items-center gap-2 mb-3 ml-1">
                             <span className="text-lg">{service?.logo || "📺"}</span>
                             <h3 className="text-sm font-semibold text-muted-foreground">
-                              {service?.name || provider}
+                              {displayName}
                             </h3>
                             <span className="text-xs text-muted-foreground/70 glass px-1.5 py-0.5 rounded-full">
                               {items.length}

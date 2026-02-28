@@ -60,6 +60,10 @@ const MovieCard = ({ item, index, hideProviderBadges = false }: MovieCardProps) 
         break;
       }
     }
+    // If no catalog match found but we have streaming providers, use the raw provider name
+    if (primaryService === "unassigned" && providers.length > 0) {
+      primaryService = providers[0].provider_name.toLowerCase();
+    }
 
     const ok = await addCue({
       tmdb_id: item.id,
