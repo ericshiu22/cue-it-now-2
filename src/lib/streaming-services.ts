@@ -152,7 +152,7 @@ export const mapProviderToServiceId = (name: string): string => {
   if (lower === "amazon prime video" || lower === "amazon prime video with ads" || lower === "prime video") return "prime video";
   if (lower === "apple tv plus" || lower === "apple tv+" || lower === "apple tv") return "apple tv+";
   if (lower === "peacock" || lower === "peacock premium" || lower === "peacock premium plus") return "peacock";
-  if (lower === "paramount+" || lower === "paramount plus") return "paramount";
+  if (lower === "paramount+" || lower === "paramount plus" || lower === "paramount+ amazon channel" || lower === "paramount plus essential" || lower === "paramount plus premium") return "paramount";
   if (lower === "crunchyroll") return "crunchyroll";
   if (lower === "tubi" || lower === "tubi tv") return "tubi";
   if (lower === "pluto tv") return "pluto";
