@@ -50,9 +50,17 @@ const MovieCard = ({ item, index, hideProviderBadges = false }: MovieCardProps) 
     e.stopPropagation();
     if (cued || saving) return;
     setSaving(true);
-    const primaryService = providers.length > 0
-      ? mapProviderToServiceId(providers[0].provider_name)
-      : "unassigned";
+
+    // Try all streaming providers to find the best service match
+    let primaryService = "unassigned";
+    for (const p of providers) {
+      const mapped = mapProviderToServiceId(p.provider_name);
+      if (mapped !== "unassigned") {
+        primaryService = mapped;
+        break;
+      }
+    }
+
     const ok = await addCue({
       tmdb_id: item.id,
       title,
