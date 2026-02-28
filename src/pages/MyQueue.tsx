@@ -350,46 +350,58 @@ const MyQueue = () => {
         ) : (
           <div className="space-y-10">
             <AnimatePresence>
-              {/* Active service groups */}
-              {activeGrouped.map(([provider, items]) => {
-                const service = getService(provider);
-                const displayName = service?.name || provider.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                return (
-                  <motion.section
-                    key={provider}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="flex items-center gap-3 mb-5">
-                      <span className="text-2xl">{service?.logo || "📺"}</span>
-                      <h2 className="text-lg font-bold text-foreground">
-                        {displayName}
-                      </h2>
-                      <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
-                        {items.length}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {items.map((cue, i) => (
-                        <CueCard key={cue.id} cue={cue} index={i} onRemove={removeCue} onUpdateService={updateService} />
-                      ))}
-                    </div>
-                  </motion.section>
-                );
-              })}
+              {/* Active service groups — highlighted container */}
+              {activeGrouped.length > 0 && (
+                <motion.div
+                  key="active-wrapper"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-6 space-y-8"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-primary">
+                      Active Subscriptions
+                    </h2>
+                  </div>
 
-              {/* No Active Service section */}
+                  {activeGrouped.map(([provider, items]) => {
+                    const service = getService(provider);
+                    const displayName = service?.name || provider.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    return (
+                      <section key={provider}>
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">{service?.logo || "📺"}</span>
+                          <h3 className="text-lg font-bold text-foreground">
+                            {displayName}
+                          </h3>
+                          <span className="text-xs text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full font-medium">
+                            {items.length}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {items.map((cue, i) => (
+                            <CueCard key={cue.id} cue={cue} index={i} onRemove={removeCue} onUpdateService={updateService} />
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </motion.div>
+              )}
+
+              {/* No Active Service section — dimmed */}
               {inactiveCues.length > 0 && (
                 <motion.section
                   key="no-active-service"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
+                  className="rounded-2xl border border-border/50 bg-secondary/30 p-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
                     <span className="text-2xl">🚫</span>
-                    <h2 className="text-lg font-bold text-foreground">No Active Service</h2>
+                    <h2 className="text-lg font-bold text-foreground/70">No Active Service</h2>
                     <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
                       {inactiveCues.length}
                     </span>
@@ -422,17 +434,18 @@ const MyQueue = () => {
                 </motion.section>
               )}
 
-              {/* Buy or Rent section */}
+              {/* Buy or Rent section — dimmed */}
               {buyRentCues.length > 0 && (
                 <motion.section
                   key="buy-or-rent"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
+                  className="rounded-2xl border border-border/50 bg-secondary/30 p-6"
                 >
                   <div className="flex items-center gap-3 mb-5">
                     <span className="text-2xl">🛒</span>
-                    <h2 className="text-lg font-bold text-foreground">Buy or Rent</h2>
+                    <h2 className="text-lg font-bold text-foreground/70">Buy or Rent</h2>
                     <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
                       {buyRentCues.length}
                     </span>
