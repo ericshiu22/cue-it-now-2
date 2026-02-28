@@ -204,20 +204,23 @@ const MyQueue = () => {
     toast.success(`Moved to ${name}`);
   };
 
-  // Split cues into active-service and no-active-service
+  // Split cues into active-service, no-active-service, and buy/rent
   const activeCues: Cue[] = [];
   const inactiveCues: Cue[] = [];
+  const buyRentCues: Cue[] = [];
 
   cues.forEach((cue) => {
     const provider = cue.service_provider.toLowerCase();
-    if (provider === "unassigned" || !activeServices.has(provider)) {
+    if (provider === "unassigned") {
+      buyRentCues.push(cue);
+    } else if (!activeServices.has(provider)) {
       inactiveCues.push(cue);
     } else {
       activeCues.push(cue);
     }
   });
 
-  // Group active cues by service provider
+  // Group cues by service provider
   const groupByProvider = (list: Cue[]) =>
     list.reduce<Record<string, Cue[]>>((acc, cue) => {
       const key = cue.service_provider;
@@ -230,11 +233,9 @@ const MyQueue = () => {
     a.localeCompare(b)
   );
 
-  const inactiveGrouped = Object.entries(groupByProvider(inactiveCues)).sort(([a], [b]) => {
-    if (a === "unassigned") return 1;
-    if (b === "unassigned") return -1;
-    return a.localeCompare(b);
-  });
+  const inactiveGrouped = Object.entries(groupByProvider(inactiveCues)).sort(([a], [b]) =>
+    a.localeCompare(b)
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -324,7 +325,7 @@ const MyQueue = () => {
                           <div className="flex items-center gap-2 mb-3 ml-1">
                             <span className="text-lg">{service?.logo || "📺"}</span>
                             <h3 className="text-sm font-semibold text-muted-foreground">
-                              {provider === "unassigned" ? "Unassigned" : service?.name || provider}
+                              {service?.name || provider}
                             </h3>
                             <span className="text-xs text-muted-foreground/70 glass px-1.5 py-0.5 rounded-full">
                               {items.length}
@@ -338,6 +339,29 @@ const MyQueue = () => {
                         </div>
                       );
                     })}
+                  </div>
+                </motion.section>
+              )}
+
+              {/* Buy or Rent section */}
+              {buyRentCues.length > 0 && (
+                <motion.section
+                  key="buy-or-rent"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="text-2xl">🛒</span>
+                    <h2 className="text-lg font-bold text-foreground">Buy or Rent</h2>
+                    <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
+                      {buyRentCues.length}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {buyRentCues.map((cue, i) => (
+                      <CueCard key={cue.id} cue={cue} index={i} onRemove={removeCue} onUpdateService={updateService} />
+                    ))}
                   </div>
                 </motion.section>
               )}
