@@ -86,21 +86,99 @@ const ServicePicker = ({
   );
 };
 
+const CueCard = ({
+  cue,
+  index,
+  onRemove,
+  onUpdateService,
+}: {
+  cue: Cue;
+  index: number;
+  onRemove: (id: string) => void;
+  onUpdateService: (id: string, serviceId: string) => void;
+}) => {
+  const poster = getImageUrl(cue.poster_path, "w300");
+  const link = getDeepLink(cue.service_provider, cue.title, cue.deep_link);
+
+  return (
+    <motion.div
+      key={cue.id}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03 }}
+      className="glass rounded-xl overflow-hidden flex group"
+    >
+      <div className="w-24 h-36 flex-shrink-0">
+        {poster ? (
+          <img src={poster} alt={cue.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-secondary flex items-center justify-center">
+            {cue.media_type === "tv" ? (
+              <Tv className="h-6 w-6 text-muted-foreground" />
+            ) : (
+              <Film className="h-6 w-6 text-muted-foreground" />
+            )}
+          </div>
+        )}
+      </div>
+      <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+        <div>
+          <h3 className="font-semibold text-foreground text-sm truncate">{cue.title}</h3>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+            <span className="uppercase">{cue.media_type}</span>
+            {cue.release_year && <span>· {cue.release_year}</span>}
+          </div>
+          <div className="mt-1.5">
+            <ServicePicker
+              current={cue.service_provider}
+              onSelect={(serviceId) => onUpdateService(cue.id, serviceId)}
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          {cue.service_provider !== "unassigned" && (
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity glow"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Watch Now
+            </a>
+          )}
+          <button
+            onClick={() => onRemove(cue.id)}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            aria-label="Remove from queue"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const MyQueue = () => {
   const [cues, setCues] = useState<Cue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeServices, setActiveServices] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const fetchCues = async () => {
-      const { data, error } = await supabase
-        .from("cues")
-        .select("*")
-        .order("created_at", { ascending: false });
+    const fetchData = async () => {
+      const [cuesRes, subsRes] = await Promise.all([
+        supabase.from("cues").select("*").order("created_at", { ascending: false }),
+        supabase.from("active_subscriptions").select("service_name").eq("is_active", true),
+      ]);
 
-      if (!error && data) setCues(data as Cue[]);
+      if (!cuesRes.error && cuesRes.data) setCues(cuesRes.data as Cue[]);
+      if (!subsRes.error && subsRes.data) {
+        setActiveServices(new Set(subsRes.data.map((s) => s.service_name.toLowerCase())));
+      }
       setLoading(false);
     };
-    fetchCues();
+    fetchData();
   }, []);
 
   const removeCue = async (id: string) => {
@@ -126,16 +204,33 @@ const MyQueue = () => {
     toast.success(`Moved to ${name}`);
   };
 
-  // Group by service provider
-  const grouped = cues.reduce<Record<string, Cue[]>>((acc, cue) => {
-    const key = cue.service_provider;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(cue);
-    return acc;
-  }, {});
+  // Split cues into active-service and no-active-service
+  const activeCues: Cue[] = [];
+  const inactiveCues: Cue[] = [];
 
-  // Sort groups: "unassigned" last
-  const sortedGroups = Object.entries(grouped).sort(([a], [b]) => {
+  cues.forEach((cue) => {
+    const provider = cue.service_provider.toLowerCase();
+    if (provider === "unassigned" || !activeServices.has(provider)) {
+      inactiveCues.push(cue);
+    } else {
+      activeCues.push(cue);
+    }
+  });
+
+  // Group active cues by service provider
+  const groupByProvider = (list: Cue[]) =>
+    list.reduce<Record<string, Cue[]>>((acc, cue) => {
+      const key = cue.service_provider;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(cue);
+      return acc;
+    }, {});
+
+  const activeGrouped = Object.entries(groupByProvider(activeCues)).sort(([a], [b]) =>
+    a.localeCompare(b)
+  );
+
+  const inactiveGrouped = Object.entries(groupByProvider(inactiveCues)).sort(([a], [b]) => {
     if (a === "unassigned") return 1;
     if (b === "unassigned") return -1;
     return a.localeCompare(b);
@@ -177,7 +272,8 @@ const MyQueue = () => {
         ) : (
           <div className="space-y-10">
             <AnimatePresence>
-              {sortedGroups.map(([provider, items]) => {
+              {/* Active service groups */}
+              {activeGrouped.map(([provider, items]) => {
                 const service = getService(provider);
                 return (
                   <motion.section
@@ -186,90 +282,65 @@ const MyQueue = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                   >
-                    {/* Service header */}
                     <div className="flex items-center gap-3 mb-5">
                       <span className="text-2xl">{service?.logo || "📺"}</span>
                       <h2 className="text-lg font-bold text-foreground">
-                        {provider === "unassigned" ? "Unassigned" : service?.name || provider}
+                        {service?.name || provider}
                       </h2>
                       <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
                         {items.length}
                       </span>
                     </div>
-
-                    {/* Cards grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {items.map((cue, i) => {
-                        const poster = getImageUrl(cue.poster_path, "w300");
-                        const link = getDeepLink(cue.service_provider, cue.title, cue.deep_link);
-
-                        return (
-                          <motion.div
-                            key={cue.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.03 }}
-                            className="glass rounded-xl overflow-hidden flex group"
-                          >
-                            {/* Poster */}
-                            <div className="w-24 h-36 flex-shrink-0">
-                              {poster ? (
-                                <img src={poster} alt={cue.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full bg-secondary flex items-center justify-center">
-                                  {cue.media_type === "tv" ? (
-                                    <Tv className="h-6 w-6 text-muted-foreground" />
-                                  ) : (
-                                    <Film className="h-6 w-6 text-muted-foreground" />
-                                  )}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Info */}
-                            <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-                              <div>
-                                <h3 className="font-semibold text-foreground text-sm truncate">{cue.title}</h3>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                  <span className="uppercase">{cue.media_type}</span>
-                                  {cue.release_year && <span>· {cue.release_year}</span>}
-                                </div>
-                                <div className="mt-1.5">
-                                  <ServicePicker
-                                    current={cue.service_provider}
-                                    onSelect={(serviceId) => updateService(cue.id, serviceId)}
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2 mt-2">
-                                {cue.service_provider !== "unassigned" && (
-                                  <a
-                                    href={link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity glow"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                    Watch Now
-                                  </a>
-                                )}
-                                <button
-                                  onClick={() => removeCue(cue.id)}
-                                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                  aria-label="Remove from queue"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                      {items.map((cue, i) => (
+                        <CueCard key={cue.id} cue={cue} index={i} onRemove={removeCue} onUpdateService={updateService} />
+                      ))}
                     </div>
                   </motion.section>
                 );
               })}
+
+              {/* No Active Service section */}
+              {inactiveCues.length > 0 && (
+                <motion.section
+                  key="no-active-service"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-2xl">🚫</span>
+                    <h2 className="text-lg font-bold text-foreground">No Active Service</h2>
+                    <span className="text-xs text-muted-foreground glass px-2 py-0.5 rounded-full">
+                      {inactiveCues.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-8">
+                    {inactiveGrouped.map(([provider, items]) => {
+                      const service = getService(provider);
+                      return (
+                        <div key={provider}>
+                          <div className="flex items-center gap-2 mb-3 ml-1">
+                            <span className="text-lg">{service?.logo || "📺"}</span>
+                            <h3 className="text-sm font-semibold text-muted-foreground">
+                              {provider === "unassigned" ? "Unassigned" : service?.name || provider}
+                            </h3>
+                            <span className="text-xs text-muted-foreground/70 glass px-1.5 py-0.5 rounded-full">
+                              {items.length}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {items.map((cue, i) => (
+                              <CueCard key={cue.id} cue={cue} index={i} onRemove={removeCue} onUpdateService={updateService} />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.section>
+              )}
             </AnimatePresence>
           </div>
         )}
