@@ -13,6 +13,7 @@ import MyQueue from "./pages/MyQueue";
 import Friends from "./pages/Friends";
 import ShowDetail from "./pages/ShowDetail";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import SubscriptionHub from "./pages/SubscriptionHub";
 import EmailPreview from "./pages/EmailPreview";
@@ -43,6 +44,7 @@ const App = () => {
                 <Route path="/friends" element={<Friends />} />
                 <Route path="/show/:type/:id" element={<ShowDetail />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/subscriptions" element={<SubscriptionHub />} />
                 <Route path="/email-preview" element={<EmailPreview />} />

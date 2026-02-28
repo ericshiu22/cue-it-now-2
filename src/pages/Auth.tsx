@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Auth = () => {
@@ -26,6 +27,21 @@ const Auth = () => {
       toast.error(error.message);
     } else if (!isLogin) {
       toast.success("Account created! You're signed in.");
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Enter your email first.");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Recovery link sent! Check your email.");
     }
   };
 
@@ -76,6 +92,15 @@ const Auth = () => {
           >
             {loading ? "..." : isLogin ? "Sign In" : "Create Account"}
           </button>
+          {isLogin && (
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="w-full text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              Forgot password?
+            </button>
+          )}
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
