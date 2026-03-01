@@ -25,6 +25,7 @@ interface FriendCue {
 interface EnrichedCue {
   cue: FriendCue;
   provider: WatchProvider | null;
+  friends: string[];
 }
 
 const FriendsWatching = () => {
@@ -52,8 +53,27 @@ const FriendsWatching = () => {
         const cues = (data as FriendCue[]) || [];
 
         // Fetch TMDB watch providers to get real logos
+        // Group cues by tmdb_id to combine friends watching the same thing
+        const grouped = new Map<number, { cue: FriendCue; friends: string[] }>();
+        for (const cue of cues) {
+          const existing = grouped.get(cue.tmdb_id);
+          if (existing) {
+            if (cue.friend_username && !existing.friends.includes(cue.friend_username)) {
+              existing.friends.push(cue.friend_username);
+            }
+          } else {
+            grouped.set(cue.tmdb_id, {
+              cue,
+              friends: cue.friend_username ? [cue.friend_username] : [],
+            });
+          }
+        }
+
+        const uniqueCues = [...grouped.values()];
+
+        // Fetch TMDB watch providers to get real logos
         const enriched = await Promise.all(
-          cues.map(async (cue) => {
+          uniqueCues.map(async ({ cue, friends }) => {
             try {
               const providers = await getWatchProviders(
                 cue.media_type as "movie" | "tv",
@@ -71,12 +91,12 @@ const FriendsWatching = () => {
                 const matched = allProviders.find(
                   (p) => mapProviderToServiceId(p.provider_name) === serviceId
                 );
-                return { cue, provider: matched || null };
+                return { cue, provider: matched || null, friends };
               }
             } catch {
               // ignore per-item errors
             }
-            return { cue, provider: null };
+            return { cue, provider: null, friends };
           })
         );
 
@@ -94,7 +114,7 @@ const FriendsWatching = () => {
   if (loading || !user || items.length === 0) return null;
 
   const friendNames = [
-    ...new Set(items.map((i) => i.cue.friend_username).filter(Boolean)),
+    ...new Set(items.flatMap((i) => i.friends).filter(Boolean)),
   ];
   const subtitle =
     friendNames.length > 0
@@ -111,7 +131,7 @@ const FriendsWatching = () => {
 
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-5 pb-4">
-          {items.map(({ cue, provider }, i) => {
+          {items.map(({ cue, provider, friends }, i) => {
             const asResult: TMDBResult = {
               id: cue.tmdb_id,
               title: cue.title,
@@ -125,6 +145,15 @@ const FriendsWatching = () => {
               first_air_date: cue.release_year || "",
               genre_ids: [],
             };
+
+            const friendLabel =
+              friends.length === 0
+                ? null
+                : friends.length === 1
+                ? friends[0]
+                : friends.length === 2
+                ? `${friends[0]} & ${friends[1]}`
+                : `${friends[0]}, ${friends[1]} +${friends.length - 2}`;
 
             return (
               <div key={cue.tmdb_id} className="w-[160px] sm:w-[180px] shrink-0">
@@ -154,11 +183,11 @@ const FriendsWatching = () => {
                       </div>
                     ) : null;
                   })()}
-                  {cue.friend_username && (
+                  {friendLabel && (
                     <div className="mt-1 flex items-center gap-1.5">
                       <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="text-[10px] text-muted-foreground truncate leading-tight">
-                        {cue.friend_username}
+                        {friendLabel}
                       </span>
                     </div>
                   )}
