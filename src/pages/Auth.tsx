@@ -140,6 +140,18 @@ const Auth = () => {
               </label>
             </div>
           )}
+          {!isLogin && (
+            <div className="rounded-lg bg-secondary/50 border border-border p-3 space-y-2">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Simulation Disclaimer:</strong>{" "}
+                Cue-It is currently in a conceptual validation phase. All "Smart Churn" or "Savings" figures displayed are simulated estimates based on information you provide. These are for illustrative purposes only and do not constitute a guarantee of actual savings or financial advice.
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Non-Binding Provision:</strong>{" "}
+                Registration for this test does not create a contract for service. We reserve the right to terminate this test or modify features without notice. No billing information is collected at this stage.
+              </p>
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading || (!isLogin && (!agreedToTos || !agreedToNotice))}
