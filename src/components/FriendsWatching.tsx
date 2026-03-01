@@ -8,6 +8,7 @@ import type { TMDBResult, WatchProvider } from "@/lib/tmdb";
 import { getWatchProviders, getImageUrl } from "@/lib/tmdb";
 import { mapProviderToServiceId, getService } from "@/lib/streaming-services";
 import SectionHeader from "./SectionHeader";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FriendCue {
   tmdb_id: number;
@@ -184,12 +185,23 @@ const FriendsWatching = () => {
                     ) : null;
                   })()}
                   {friendLabel && (
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="text-[10px] text-muted-foreground truncate leading-tight">
-                        {friendLabel}
-                      </span>
-                    </div>
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="mt-1 flex items-center gap-1.5 cursor-default">
+                            <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                              {friendLabel}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        {friends.length > 2 && (
+                          <TooltipContent side="bottom" className="max-w-[200px]">
+                            <p className="text-xs">{friends.join(", ")}</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </div>
               </div>
