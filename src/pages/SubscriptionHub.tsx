@@ -17,6 +17,10 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import PasswordManager from "@/components/PasswordManager";
 import { Progress } from "@/components/ui/progress";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ActiveSub {
   id: string;
@@ -54,6 +58,10 @@ const SubscriptionHub = () => {
   /* ── Health / Optimize state ── */
   const [healthItems, setHealthItems] = useState<ServiceHealth[]>([]);
   const [showOptimizeModal, setShowOptimizeModal] = useState(false);
+
+  /* ── Delete confirmation state ── */
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const pendingDeleteSub = subs.find((s) => s.id === pendingDeleteId);
 
   /* ── Fetch all data ── */
   useEffect(() => {
@@ -269,7 +277,7 @@ const SubscriptionHub = () => {
               <p className="text-xs text-muted-foreground text-center py-3">No subscriptions yet. Tap + to add.</p>
             ) : (
               <div className="max-h-[400px] overflow-y-auto divide-y divide-border/30">
-                <SubscriptionHealth onHealthData={setHealthItems} embedded subs={subs} onRemove={removeSubscription} />
+                <SubscriptionHealth onHealthData={setHealthItems} embedded subs={subs} onRemove={(id) => setPendingDeleteId(id)} />
               </div>
             )}
           </motion.div>
@@ -456,6 +464,29 @@ const SubscriptionHub = () => {
           );
         })()}
       </AnimatePresence>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Service</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove{" "}
+              <strong>{pendingDeleteSub ? (getService(pendingDeleteSub.service_name)?.name || pendingDeleteSub.service_name) : "this service"}</strong>{" "}
+              from your active subscriptions? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (pendingDeleteId) { removeSubscription(pendingDeleteId); setPendingDeleteId(null); } }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
