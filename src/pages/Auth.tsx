@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import TermsOfService from "@/components/TermsOfService";
 
 const Auth = () => {
   const { user } = useAuth();
@@ -11,12 +13,18 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreedToTos, setAgreedToTos] = useState(false);
+  const [tosOpen, setTosOpen] = useState(false);
   const { signIn, signUp } = useAuth();
 
   if (user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && !agreedToTos) {
+      toast.error("You must agree to the Terms of Service to create an account.");
+      return;
+    }
     setLoading(true);
     const { error } = isLogin
       ? await signIn(email, password)
@@ -85,9 +93,29 @@ const Auth = () => {
               placeholder="••••••••"
             />
           </div>
+          {!isLogin && (
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="tos"
+                checked={agreedToTos}
+                onCheckedChange={(v) => setAgreedToTos(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="tos" className="text-xs text-muted-foreground leading-snug cursor-pointer">
+                I agree to the{" "}
+                <button
+                  type="button"
+                  onClick={() => setTosOpen(true)}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Terms of Service & Disclaimers
+                </button>
+              </label>
+            </div>
+          )}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (!isLogin && !agreedToTos)}
             className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity glow disabled:opacity-50"
           >
             {loading ? "..." : isLogin ? "Sign In" : "Create Account"}
@@ -102,6 +130,8 @@ const Auth = () => {
             </button>
           )}
         </form>
+
+        <TermsOfService open={tosOpen} onOpenChange={setTosOpen} />
 
         <p className="text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
