@@ -197,6 +197,9 @@ const SubscriptionHub = () => {
                 <span className="text-sm text-muted-foreground">
                   Spending <span className="text-foreground font-semibold">${totalMonthly.toFixed(2)}/mo</span>
                 </span>
+                <span className="text-sm text-muted-foreground">
+                  <span className="text-foreground font-semibold">${(totalMonthly * 12).toFixed(2)}/yr</span> total
+                </span>
                 {totalSwapSavings > 0 && (
                   <span className="flex items-center gap-1 text-sm font-semibold text-[hsl(var(--brand-cyan))]">
                     <TrendingDown className="h-4 w-4" />
