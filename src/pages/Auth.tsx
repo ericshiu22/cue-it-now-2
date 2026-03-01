@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import TermsOfService from "@/components/TermsOfService";
+import NoticeAtCollection from "@/components/NoticeAtCollection";
 
 const Auth = () => {
   const { user } = useAuth();
@@ -15,6 +16,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [agreedToTos, setAgreedToTos] = useState(false);
   const [tosOpen, setTosOpen] = useState(false);
+  const [agreedToNotice, setAgreedToNotice] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
   const { signIn, signUp } = useAuth();
 
   if (user) return <Navigate to="/" replace />;
@@ -23,6 +26,10 @@ const Auth = () => {
     e.preventDefault();
     if (!isLogin && !agreedToTos) {
       toast.error("You must agree to the Terms of Service to create an account.");
+      return;
+    }
+    if (!isLogin && !agreedToNotice) {
+      toast.error("You must acknowledge the Notice at Collection.");
       return;
     }
     setLoading(true);
@@ -113,9 +120,29 @@ const Auth = () => {
               </label>
             </div>
           )}
+          {!isLogin && (
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="notice"
+                checked={agreedToNotice}
+                onCheckedChange={(v) => setAgreedToNotice(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="notice" className="text-xs text-muted-foreground leading-snug cursor-pointer">
+                I acknowledge the{" "}
+                <button
+                  type="button"
+                  onClick={() => setNoticeOpen(true)}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Notice at Collection
+                </button>
+              </label>
+            </div>
+          )}
           <button
             type="submit"
-            disabled={loading || (!isLogin && !agreedToTos)}
+            disabled={loading || (!isLogin && (!agreedToTos || !agreedToNotice))}
             className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity glow disabled:opacity-50"
           >
             {loading ? "..." : isLogin ? "Sign In" : "Create Account"}
@@ -132,6 +159,7 @@ const Auth = () => {
         </form>
 
         <TermsOfService open={tosOpen} onOpenChange={setTosOpen} />
+        <NoticeAtCollection open={noticeOpen} onOpenChange={setNoticeOpen} />
 
         <p className="text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
