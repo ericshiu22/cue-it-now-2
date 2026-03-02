@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Trash2, Film, Tv, ChevronDown, ShoppingCart } from "lucide-react";
+import { ExternalLink, Trash2, Film, Tv, ChevronDown, ShoppingCart, RefreshCw, AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl } from "@/lib/tmdb";
 import { getService, getDeepLink, SERVICE_LIST } from "@/lib/streaming-services";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Cue {
   id: string;
@@ -19,6 +21,8 @@ interface Cue {
   vote_average: number | null;
   release_year: string | null;
   overview: string | null;
+  provider_status?: string;
+  previous_service_provider?: string | null;
 }
 
 const ServicePicker = ({
@@ -157,6 +161,57 @@ const BuyRentPicker = ({ title }: { title: string }) => {
   );
 };
 
+const ProviderStatusBadge = ({ cue }: { cue: Cue }) => {
+  if (!cue.provider_status || cue.provider_status === "active") return null;
+
+  const prevService = cue.previous_service_provider
+    ? getService(cue.previous_service_provider)?.name || cue.previous_service_provider
+    : null;
+  const currentService = getService(cue.service_provider)?.name || cue.service_provider;
+
+  if (cue.provider_status === "moved") {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="outline" className="gap-1 text-[10px] border-amber-500/50 text-amber-400 bg-amber-500/10">
+              <ArrowRightLeft className="h-3 w-3" />
+              Moved
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[220px]">
+            <p className="text-xs">
+              Moved from {prevService} → {currentService}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  if (cue.provider_status === "leaving") {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="outline" className="gap-1 text-[10px] border-destructive/50 text-destructive bg-destructive/10">
+              <AlertTriangle className="h-3 w-3" />
+              Leaving
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[220px]">
+            <p className="text-xs">
+              No longer streaming on {prevService || currentService}. May only be available to buy or rent.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return null;
+};
+
 const CueCard = ({
   cue,
   index,
@@ -181,7 +236,7 @@ const CueCard = ({
       transition={{ delay: index * 0.03 }}
       className="glass rounded-xl overflow-hidden flex group"
     >
-      <div className="w-24 h-36 flex-shrink-0">
+      <div className="w-24 h-36 flex-shrink-0 relative">
         {poster ? (
           <img src={poster} alt={cue.title} className="w-full h-full object-cover" />
         ) : (
@@ -196,7 +251,10 @@ const CueCard = ({
       </div>
       <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
         <div>
-          <h3 className="font-semibold text-foreground text-sm truncate">{cue.title}</h3>
+          <div className="flex items-start justify-between gap-1">
+            <h3 className="font-semibold text-foreground text-sm truncate">{cue.title}</h3>
+            <ProviderStatusBadge cue={cue} />
+          </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
             <span className="uppercase">{cue.media_type}</span>
             {cue.release_year && <span>· {cue.release_year}</span>}
@@ -240,23 +298,57 @@ const CueCard = ({
 const MyQueue = () => {
   const [cues, setCues] = useState<Cue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeServices, setActiveServices] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [cuesRes, subsRes] = await Promise.all([
-        supabase.from("cues").select("*").order("created_at", { ascending: false }),
-        supabase.from("active_subscriptions").select("service_name").eq("is_active", true),
-      ]);
+  const fetchData = async () => {
+    const [cuesRes, subsRes] = await Promise.all([
+      supabase.from("cues").select("*").order("created_at", { ascending: false }),
+      supabase.from("active_subscriptions").select("service_name").eq("is_active", true),
+    ]);
 
-      if (!cuesRes.error && cuesRes.data) setCues(cuesRes.data as Cue[]);
-      if (!subsRes.error && subsRes.data) {
-        setActiveServices(new Set(subsRes.data.map((s) => s.service_name.toLowerCase())));
-      }
-      setLoading(false);
-    };
+    if (!cuesRes.error && cuesRes.data) setCues(cuesRes.data as Cue[]);
+    if (!subsRes.error && subsRes.data) {
+      setActiveServices(new Set(subsRes.data.map((s) => s.service_name.toLowerCase())));
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  // On-demand provider refresh
+  const refreshProviders = async () => {
+    setRefreshing(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.functions.invoke("check-providers", {
+        body: { user_id: user.id },
+      });
+
+      if (error) throw error;
+
+      // Re-fetch cues to show updated statuses
+      await fetchData();
+
+      const updated = cues.filter(
+        (c) => c.provider_status === "moved" || c.provider_status === "leaving"
+      );
+      if (updated.length > 0) {
+        toast.info(`${updated.length} title${updated.length > 1 ? "s" : ""} had provider changes.`);
+      } else {
+        toast.success("All titles confirmed on their current services.");
+      }
+    } catch (err: any) {
+      console.error("Provider refresh failed:", err);
+      toast.error("Couldn't refresh providers. Try again later.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const removeCue = async (id: string) => {
     await supabase.from("cues").delete().eq("id", id);
@@ -266,7 +358,7 @@ const MyQueue = () => {
   const updateService = async (id: string, serviceId: string) => {
     const { error } = await supabase
       .from("cues")
-      .update({ service_provider: serviceId })
+      .update({ service_provider: serviceId, provider_status: "active", previous_service_provider: null })
       .eq("id", id);
 
     if (error) {
@@ -275,7 +367,7 @@ const MyQueue = () => {
     }
 
     setCues((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, service_provider: serviceId } : c))
+      prev.map((c) => (c.id === id ? { ...c, service_provider: serviceId, provider_status: "active", previous_service_provider: null } : c))
     );
     const name = getService(serviceId)?.name || serviceId;
     toast.success(`Moved to ${name}`);
@@ -314,6 +406,10 @@ const MyQueue = () => {
     a.localeCompare(b)
   );
 
+  const changedCount = cues.filter(
+    (c) => c.provider_status === "moved" || c.provider_status === "leaving"
+  ).length;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Page header */}
@@ -321,10 +417,24 @@ const MyQueue = () => {
         <h1 className="text-2xl font-bold text-foreground">
           My <span className="text-gradient">Queue</span>
         </h1>
-        <span className="text-sm text-muted-foreground">{cues.length} titles</span>
+        <div className="flex items-center gap-3">
+          {changedCount > 0 && (
+            <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-400 bg-amber-500/10">
+              <AlertTriangle className="h-3 w-3" />
+              {changedCount} changed
+            </Badge>
+          )}
+          <button
+            onClick={refreshProviders}
+            disabled={refreshing || loading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary border border-border hover:border-primary/50 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Checking…" : "Check Services"}
+          </button>
+          <span className="text-sm text-muted-foreground">{cues.length} titles</span>
+        </div>
       </div>
-
-      
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (

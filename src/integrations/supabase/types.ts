@@ -73,6 +73,9 @@ export type Database = {
           media_type: string
           overview: string | null
           poster_path: string | null
+          previous_service_provider: string | null
+          provider_checked_at: string | null
+          provider_status: string
           release_year: string | null
           service_provider: string
           status: string
@@ -88,6 +91,9 @@ export type Database = {
           media_type: string
           overview?: string | null
           poster_path?: string | null
+          previous_service_provider?: string | null
+          provider_checked_at?: string | null
+          provider_status?: string
           release_year?: string | null
           service_provider: string
           status?: string
@@ -103,6 +109,9 @@ export type Database = {
           media_type?: string
           overview?: string | null
           poster_path?: string | null
+          previous_service_provider?: string | null
+          provider_checked_at?: string | null
+          provider_status?: string
           release_year?: string | null
           service_provider?: string
           status?: string
