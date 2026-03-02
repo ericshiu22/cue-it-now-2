@@ -259,16 +259,22 @@ const CueCard = ({
             <span className="uppercase">{cue.media_type}</span>
             {cue.release_year && <span>· {cue.release_year}</span>}
           </div>
-          <div className="mt-1.5">
-            {isBuyRent ? (
+          {isBuyRent ? (
+            <div className="mt-1.5">
               <BuyRentPicker title={cue.title} />
-            ) : (
-              <ServicePicker
-                current={cue.service_provider}
-                onSelect={(serviceId) => onUpdateService(cue.id, serviceId)}
-              />
-            )}
-          </div>
+            </div>
+          ) : (
+            (() => {
+              const service = getService(cue.service_provider);
+              const displayName = service?.name || cue.service_provider.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+              return (
+                <div className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>{service?.logo || "📺"}</span>
+                  <span>{displayName}</span>
+                </div>
+              );
+            })()
+          )}
         </div>
         <div className="flex items-center gap-2 mt-2">
           {!isBuyRent && cue.service_provider !== "unassigned" && (
