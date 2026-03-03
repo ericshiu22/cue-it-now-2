@@ -66,7 +66,7 @@ const SubscriptionHub = () => {
 
   /* ── Fetch all data ── */
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setProfileLoading(false); return; }
 
     const fetchAll = async () => {
       const [subsRes, swapsRes] = await Promise.all([
