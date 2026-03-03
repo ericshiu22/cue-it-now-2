@@ -331,7 +331,7 @@ const Friends = () => {
                   </section>
                 )}
 
-                {acceptedFriends.length > 0 && (
+                {user && acceptedFriends.length > 0 && (
                   <FriendGroups
                     userId={user.id}
                     friends={acceptedFriends}
@@ -387,7 +387,7 @@ const Friends = () => {
                   <Users className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
                   <p className="text-muted-foreground">No friends yet. Add friends in the Friends tab to start comparing queues!</p>
                 </div>
-              ) : (
+              ) : user ? (
                 <>
                   <FriendGroups
                     userId={user.id}
@@ -420,7 +420,7 @@ const Friends = () => {
                   ))}
                   </div>
                 </>
-              )}
+              ) : null}
             </div>
 
             {/* Shared Queue */}
