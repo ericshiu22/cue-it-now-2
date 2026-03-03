@@ -69,7 +69,7 @@ const Friends = () => {
 
   // --- Friends logic ---
   const fetchFriendships = async () => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     setLoading(true);
 
     const { data, error } = await supabase
