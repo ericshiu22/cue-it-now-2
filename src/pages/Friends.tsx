@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getImageUrl } from "@/lib/tmdb";
 import { getService, getDeepLink } from "@/lib/streaming-services";
 import FriendGroups from "@/components/FriendGroups";
+import AuthGateTooltip from "@/components/AuthGateTooltip";
 
 interface Profile {
   user_id: string;
@@ -203,18 +204,6 @@ const Friends = () => {
     fetchFriendQueue();
   }, [user, selectedFriend]);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <Users className="h-16 w-16 mx-auto text-muted-foreground/40 mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-2">Sign in to connect</h2>
-          <p className="text-muted-foreground mb-6">Manage friends and find shows to watch together.</p>
-          <Link to="/auth" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-brand text-primary-foreground font-semibold hover:opacity-90 transition-opacity glow">Sign In</Link>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -240,20 +229,22 @@ const Friends = () => {
             {/* Search */}
             <div className="mb-8">
               <label className="block text-sm font-medium text-muted-foreground mb-2">Find friends by username or email</label>
-              <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by username or email…"
-                    className="w-full pl-10 pr-4 py-2.5 glass rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/30 transition-all"
-                  />
-                </div>
-                <button type="submit" disabled={!searchQuery.trim() || searching}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-brand text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-40">
-                  {searching ? "…" : "Search"}
-                </button>
-              </form>
+              <AuthGateTooltip>
+                <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search by username or email…"
+                      className="w-full pl-10 pr-4 py-2.5 glass rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/30 transition-all"
+                    />
+                  </div>
+                  <button type="submit" disabled={!searchQuery.trim() || searching}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-brand text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-40">
+                    {searching ? "…" : "Search"}
+                  </button>
+                </form>
+              </AuthGateTooltip>
 
               <AnimatePresence>
                 {filteredResults.length > 0 && (
