@@ -413,7 +413,7 @@ const MyQueue = () => {
   );
 
   const changedCount = cues.filter(
-    (c) => c.provider_status === "moved" || c.provider_status === "leaving"
+    (c) => c.provider_status === "leaving"
   ).length;
 
   return (
