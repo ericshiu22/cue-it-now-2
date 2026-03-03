@@ -54,47 +54,41 @@ const Navbar = () => {
             Discover
           </Link>
 
-          {user && (
-            <Link
-              to="/queue"
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/queue"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <ListVideo className="h-4 w-4 inline mr-1.5 -mt-0.5" />
-              My Queue
-            </Link>
-          )}
+          <Link
+            to="/queue"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              location.pathname === "/queue"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <ListVideo className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+            My Queue
+          </Link>
 
-          {user && (
-            <Link
-              to="/friends"
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/friends"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Users className="h-4 w-4 inline mr-1.5 -mt-0.5" />
-              Friends
-            </Link>
-          )}
+          <Link
+            to="/friends"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              location.pathname === "/friends"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+            Friends
+          </Link>
 
-          {user && (
-            <Link
-              to="/subscriptions"
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/subscriptions"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Wallet className="h-4 w-4 inline mr-1.5 -mt-0.5" />
-              Sub Hub
-            </Link>
-          )}
+          <Link
+            to="/subscriptions"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              location.pathname === "/subscriptions"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Wallet className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+            Sub Hub
+          </Link>
 
           {user ? (
             <>

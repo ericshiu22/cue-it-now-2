@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import MinimalistChurnEmail from "@/components/emails/MinimalistChurnEmail";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import AuthGateTooltip from "@/components/AuthGateTooltip";
 import { SERVICE_LIST, getService } from "@/lib/streaming-services";
 import { getImageUrl } from "@/lib/tmdb";
 import { formatDistanceToNow } from "date-fns";
@@ -100,7 +101,7 @@ const SubscriptionHub = () => {
     toast.success("Subscription removed.");
   };
 
-  if (!user) { navigate("/auth"); return null; }
+  
 
   const availableServices = SERVICE_LIST.filter(
     (s) => !subs.some((sub) => sub.service_name.toLowerCase() === s.id.toLowerCase())
@@ -249,12 +250,14 @@ const SubscriptionHub = () => {
                   {subs.length} · ${totalMonthly.toFixed(2)}/mo
                 </span>
               </div>
-              <button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="h-7 w-7 rounded-md bg-secondary/60 hover:bg-secondary flex items-center justify-center transition-colors"
-              >
-                <Plus className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${showAddForm ? "rotate-45" : ""}`} />
-              </button>
+              <AuthGateTooltip>
+                <button
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="h-7 w-7 rounded-md bg-secondary/60 hover:bg-secondary flex items-center justify-center transition-colors"
+                >
+                  <Plus className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${showAddForm ? "rotate-45" : ""}`} />
+                </button>
+              </AuthGateTooltip>
             </div>
 
             <AnimatePresence>
