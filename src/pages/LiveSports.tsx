@@ -4,6 +4,7 @@ import { Zap, Trophy, MapPin, ChevronDown, Wifi } from "lucide-react";
 import ScoreboardCard from "@/components/ScoreboardCard";
 import SeasonPassTracker from "@/components/SeasonPassTracker";
 import FavoriteTeamsPicker from "@/components/FavoriteTeamsPicker";
+import TeamScheduleSearch from "@/components/TeamScheduleSearch";
 import { MOCK_GAMES } from "@/lib/mock-sports-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -303,6 +304,14 @@ const LiveSports = () => {
             isFavorite={isFavorite}
           />
         )}
+
+        {/* Team Schedule Search */}
+        <TeamScheduleSearch
+          followedGames={followedGames}
+          onFollow={handleFollow}
+          onUnfollow={handleUnfollow}
+          userServiceIds={userServiceIds}
+        />
 
         {localMarket && (
           <motion.div
