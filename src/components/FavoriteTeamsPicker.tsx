@@ -108,30 +108,32 @@ const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite }: Props) 
                 />
               </div>
 
-              <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
-                {filtered.length === 0 && (
-                  <p className="text-xs text-muted-foreground py-2 px-1">No teams found for "{query}"</p>
-                )}
-                {filtered.map((team) => {
-                  const fav = isFavorite(team.abbr);
-                  return (
-                    <button
-                      key={team.abbr}
-                      onClick={() => fav ? onRemove(team.abbr) : onAdd(team.abbr, team.league)}
-                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-all ${
-                        fav
-                          ? "bg-primary/15 text-primary border border-primary/30 font-medium"
-                          : "bg-background border border-border/50 text-muted-foreground hover:text-foreground hover:border-border"
-                      }`}
-                    >
-                      <span>{team.emoji}</span>
-                      <span>{team.abbr}</span>
-                      <span className="hidden sm:inline text-muted-foreground">· {team.name}</span>
-                      {fav && <Star className="h-2.5 w-2.5 fill-current" />}
-                    </button>
-                  );
-                })}
-              </div>
+              {query.trim().length > 0 && (
+                <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+                  {filtered.length === 0 && (
+                    <p className="text-xs text-muted-foreground py-2 px-1">No teams found for "{query}"</p>
+                  )}
+                  {filtered.map((team) => {
+                    const fav = isFavorite(team.abbr);
+                    return (
+                      <button
+                        key={team.abbr}
+                        onClick={() => fav ? onRemove(team.abbr) : onAdd(team.abbr, team.league)}
+                        className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-all ${
+                          fav
+                            ? "bg-primary/15 text-primary border border-primary/30 font-medium"
+                            : "bg-background border border-border/50 text-muted-foreground hover:text-foreground hover:border-border"
+                        }`}
+                      >
+                        <span>{team.emoji}</span>
+                        <span>{team.abbr}</span>
+                        <span className="text-muted-foreground">· {team.name}</span>
+                        {fav && <Star className="h-2.5 w-2.5 fill-current" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </motion.div>
         )}
