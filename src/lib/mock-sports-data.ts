@@ -24,6 +24,39 @@ const now = new Date();
 const later = (hours: number) => new Date(now.getTime() + hours * 3600000).toISOString();
 const ago = (hours: number) => new Date(now.getTime() - hours * 3600000).toISOString();
 
+// Season schedule info for season pass tracking
+export interface SeasonInfo {
+  name: string;
+  league: string;
+  primaryService: string;
+  startDate: string;
+  endDate: string;
+}
+
+export const SEASON_DATA: Record<string, SeasonInfo> = {
+  NFL: {
+    name: "2025–26 NFL Season",
+    league: "NFL",
+    primaryService: "peacock",
+    startDate: "2025-09-04",
+    endDate: "2026-02-08",
+  },
+  NBA: {
+    name: "2025–26 NBA Season",
+    league: "NBA",
+    primaryService: "hulu",
+    startDate: "2025-10-21",
+    endDate: "2026-06-19",
+  },
+  MLB: {
+    name: "2026 MLB Season",
+    league: "MLB",
+    primaryService: "appletv",
+    startDate: "2026-03-26",
+    endDate: "2026-10-25",
+  },
+};
+
 export const MOCK_GAMES: GameData[] = [
   {
     id: "nba-1",

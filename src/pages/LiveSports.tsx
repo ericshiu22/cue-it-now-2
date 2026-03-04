@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Zap, Trophy } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ScoreboardCard from "@/components/ScoreboardCard";
+import SeasonPassTracker from "@/components/SeasonPassTracker";
 import { MOCK_GAMES, type League } from "@/lib/mock-sports-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -24,12 +25,21 @@ const LiveSports = () => {
       ? MOCK_GAMES
       : MOCK_GAMES.filter((g) => g.league === activeLeague);
 
-    // Sort: live first, then scheduled, then final
     const order = { live: 0, scheduled: 1, final: 2 };
     return [...games].sort((a, b) => order[a.status] - order[b.status]);
   }, [activeLeague]);
 
   const liveCount = MOCK_GAMES.filter((g) => g.status === "live").length;
+
+  // Count followed games per league for season pass auto-detect
+  const followedByLeague = useMemo(() => {
+    const counts: Record<string, number> = {};
+    followedGames.forEach((gameId) => {
+      const game = MOCK_GAMES.find((g) => g.id === gameId);
+      if (game) counts[game.league] = (counts[game.league] || 0) + 1;
+    });
+    return counts;
+  }, [followedGames]);
 
   const handleFollow = (gameId: string) => {
     setFollowedGames((prev) => {
@@ -65,12 +75,12 @@ const LiveSports = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground">Live Sports</h1>
             {liveCount > 0 && (
-              <div className="flex items-center gap-1.5 ml-2 px-2.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30">
+              <div className="flex items-center gap-1.5 ml-2 px-2.5 py-0.5 rounded-full bg-destructive/15 border border-destructive/30">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
                 </span>
-                <span className="text-xs font-semibold text-red-400">{liveCount} Live Now</span>
+                <span className="text-xs font-semibold text-destructive">{liveCount} Live Now</span>
               </div>
             )}
           </motion.div>
@@ -81,7 +91,12 @@ const LiveSports = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+        {/* Season Pass Tracker */}
+        {user && (
+          <SeasonPassTracker followedGameLeagues={followedByLeague} />
+        )}
+
         <Tabs value={activeLeague} onValueChange={setActiveLeague}>
           <TabsList className="mb-6 bg-muted/50">
             {LEAGUES.map((l) => (
