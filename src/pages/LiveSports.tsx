@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Trophy, MapPin, ChevronDown } from "lucide-react";
+import { Zap, Trophy, MapPin, ChevronDown, Wifi } from "lucide-react";
 import ScoreboardCard from "@/components/ScoreboardCard";
 import SeasonPassTracker from "@/components/SeasonPassTracker";
 import { MOCK_GAMES } from "@/lib/mock-sports-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import { useWatchmode } from "@/hooks/useWatchmode";
 import { findLocalMarket, isLocalGame, isBlackedOut } from "@/lib/local-sports-data";
 import { toast } from "sonner";
 
@@ -165,6 +166,7 @@ const LiveSports = () => {
   const [followedGames, setFollowedGames] = useState<Set<string>>(new Set());
   const location = useUserLocation();
   const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
+  const { sources: watchmodeSources, loading: watchmodeLoading } = useWatchmode("US");
 
   const filteredGames = useMemo(() => {
     const games =
@@ -255,6 +257,12 @@ const LiveSports = () => {
                 </span>
               </motion.div>
             )}
+            {!watchmodeLoading && watchmodeSources && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                <Wifi className="h-3 w-3 text-emerald-500" />
+                <span className="text-[11px] font-medium text-emerald-500">Watchmode Live</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -325,6 +333,7 @@ const LiveSports = () => {
                 onUnfollow={handleUnfollow}
                 isLocalGame={gameIsLocal}
                 isBlackedOut={gameIsBlackedOut}
+                watchmodeSources={watchmodeSources}
               />
             );
           })}

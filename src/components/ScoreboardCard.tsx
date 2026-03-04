@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Bell, BellOff, Tv, Flag, MapPin, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+interface WatchmodeSourceInfo {
+  name: string;
+  type: string;
+  internalId: string | null;
+  logo: string;
+  regions: string[];
+}
+
 interface ScoreboardCardProps {
   game: GameData;
   index: number;
@@ -21,6 +30,7 @@ interface ScoreboardCardProps {
   onUnfollow: (gameId: string) => void;
   isLocalGame?: boolean;
   isBlackedOut?: boolean;
+  watchmodeSources?: Record<number, WatchmodeSourceInfo> | null;
 }
 
 const leagueColors: Record<string, string> = {
@@ -93,11 +103,22 @@ const BlackoutBadge = () => (
   </TooltipProvider>
 );
 
-const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocalGame: isLocal, isBlackedOut: blackout }: ScoreboardCardProps) => {
+const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocalGame: isLocal, isBlackedOut: blackout, watchmodeSources }: ScoreboardCardProps) => {
   const { user } = useAuth();
   const service = getService(game.streamingService);
   const isLive = game.status === "live";
   const isFinal = game.status === "final";
+
+  // Find Watchmode logo for the streaming service
+  const watchmodeLogo = useMemo(() => {
+    if (!watchmodeSources) return null;
+    for (const [, src] of Object.entries(watchmodeSources)) {
+      if (src.internalId === game.streamingService && src.logo) {
+        return src.logo;
+      }
+    }
+    return null;
+  }, [watchmodeSources, game.streamingService]);
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
@@ -173,11 +194,13 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
           <div className="flex items-center gap-1.5">
             <Tv className="h-3 w-3 text-muted-foreground" />
             <span className="text-[11px] text-muted-foreground">{game.broadcaster}</span>
-            {service && (
+            {watchmodeLogo ? (
+              <img src={watchmodeLogo} alt={service?.name || game.streamingService} className="h-4 w-4 rounded-sm object-contain ml-1" />
+            ) : service ? (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-1 border-primary/30 text-primary">
                 {service.name}
               </Badge>
-            )}
+            ) : null}
           </div>
           {!isFinal && (
             <Button
@@ -260,11 +283,13 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
         <div className="flex items-center gap-1.5">
           <Tv className="h-3 w-3 text-muted-foreground" />
           <span className="text-[11px] text-muted-foreground">{game.broadcaster}</span>
-          {service && (
+          {watchmodeLogo ? (
+            <img src={watchmodeLogo} alt={service?.name || game.streamingService} className="h-4 w-4 rounded-sm object-contain ml-1" />
+          ) : service ? (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-1 border-primary/30 text-primary">
               {service.name}
             </Badge>
-          )}
+          ) : null}
         </div>
         {!isFinal && (
           <Button
