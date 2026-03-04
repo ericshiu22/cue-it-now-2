@@ -20,13 +20,11 @@ const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite }: Props) 
 
   const filtered = useMemo(() => {
     if (!query.trim()) return ALL_SPORTS_TEAMS;
-    const q = query.toLowerCase();
-    return ALL_SPORTS_TEAMS.filter(
-      (t) =>
-        t.name.toLowerCase().includes(q) ||
-        t.abbr.toLowerCase().includes(q) ||
-        t.league.toLowerCase().includes(q)
-    );
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    return ALL_SPORTS_TEAMS.filter((t) => {
+      const haystack = `${t.name} ${t.abbr} ${t.league}`.toLowerCase();
+      return words.every((w) => haystack.includes(w));
+    });
   }, [query]);
 
   return (
@@ -46,7 +44,7 @@ const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite }: Props) 
         <AnimatePresence>
           {favorites.map((f) => (
             <motion.div
-              key={f.team_abbr}
+              key={`${f.team_abbr}-${f.league}`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
