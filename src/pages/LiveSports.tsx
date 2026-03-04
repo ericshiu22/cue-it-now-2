@@ -1,7 +1,6 @@
-import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Zap, Trophy, MapPin } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Zap, Trophy, MapPin, ChevronDown } from "lucide-react";
 import ScoreboardCard from "@/components/ScoreboardCard";
 import SeasonPassTracker from "@/components/SeasonPassTracker";
 import { MOCK_GAMES } from "@/lib/mock-sports-data";
@@ -10,25 +9,155 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import { findLocalMarket, isLocalGame, isBlackedOut } from "@/lib/local-sports-data";
 import { toast } from "sonner";
 
-const LEAGUES: { value: string; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "NFL", label: "🏈 NFL" },
-  { value: "NBA", label: "🏀 NBA" },
-  { value: "MLB", label: "⚾ MLB" },
-  { value: "NHL", label: "🏒 NHL" },
-  { value: "NCAAF", label: "🏈 NCAAF" },
-  { value: "WNBA", label: "🏀 WNBA" },
-  { value: "NCAAM", label: "🏀 NCAAM" },
-  { value: "NCAAW", label: "🏀 NCAAW" },
-  { value: "F1", label: "🏎️ F1" },
-  { value: "NASCAR", label: "🏁 NASCAR" },
-  { value: "Golf", label: "⛳ Golf" },
-  { value: "MLS", label: "⚽ MLS" },
-  { value: "Liga MX", label: "⚽ Liga MX" },
-  { value: "EPL", label: "⚽ EPL" },
-  { value: "La Liga", label: "⚽ La Liga" },
-  { value: "UCL", label: "⚽ UCL" },
+interface SportCategory {
+  label: string;
+  emoji: string;
+  leagues: { value: string; label: string }[];
+}
+
+const SPORT_CATEGORIES: SportCategory[] = [
+  {
+    label: "Football",
+    emoji: "🏈",
+    leagues: [
+      { value: "NFL", label: "NFL" },
+      { value: "NCAAF", label: "NCAAF" },
+    ],
+  },
+  {
+    label: "Basketball",
+    emoji: "🏀",
+    leagues: [
+      { value: "NBA", label: "NBA" },
+      { value: "WNBA", label: "WNBA" },
+      { value: "NCAAM", label: "NCAAM" },
+      { value: "NCAAW", label: "NCAAW" },
+    ],
+  },
+  {
+    label: "Baseball",
+    emoji: "⚾",
+    leagues: [{ value: "MLB", label: "MLB" }],
+  },
+  {
+    label: "Hockey",
+    emoji: "🏒",
+    leagues: [{ value: "NHL", label: "NHL" }],
+  },
+  {
+    label: "Soccer",
+    emoji: "⚽",
+    leagues: [
+      { value: "MLS", label: "MLS" },
+      { value: "EPL", label: "EPL" },
+      { value: "La Liga", label: "La Liga" },
+      { value: "Liga MX", label: "Liga MX" },
+      { value: "UCL", label: "UCL" },
+    ],
+  },
+  {
+    label: "Motorsports",
+    emoji: "🏎️",
+    leagues: [
+      { value: "F1", label: "F1" },
+      { value: "NASCAR", label: "NASCAR" },
+    ],
+  },
+  {
+    label: "Golf",
+    emoji: "⛳",
+    leagues: [{ value: "Golf", label: "PGA Tour" }],
+  },
 ];
+
+/** Dropdown for a sport category with multiple leagues */
+const SportDropdown = ({
+  category,
+  activeLeague,
+  onSelect,
+}: {
+  category: SportCategory;
+  activeLeague: string;
+  onSelect: (value: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const isActive = category.leagues.some((l) => l.value === activeLeague);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Single-league category — just a button, no dropdown
+  if (category.leagues.length === 1) {
+    const league = category.leagues[0];
+    return (
+      <button
+        onClick={() => onSelect(league.value)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+          isActive
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+        }`}
+      >
+        <span>{category.emoji}</span>
+        <span>{league.label}</span>
+      </button>
+    );
+  }
+
+  const activeInCategory = category.leagues.find((l) => l.value === activeLeague);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+          isActive
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+        }`}
+      >
+        <span>{category.emoji}</span>
+        <span>{activeInCategory ? activeInCategory.label : category.label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full left-0 mt-1.5 z-50 min-w-[140px] rounded-lg border border-border bg-popover shadow-lg p-1"
+          >
+            {category.leagues.map((league) => (
+              <button
+                key={league.value}
+                onClick={() => {
+                  onSelect(league.value);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
+                  activeLeague === league.value
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-foreground hover:bg-muted"
+                }`}
+              >
+                {league.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const LiveSports = () => {
   const { user } = useAuth();
@@ -38,9 +167,10 @@ const LiveSports = () => {
   const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
 
   const filteredGames = useMemo(() => {
-    const games = activeLeague === "all"
-      ? MOCK_GAMES
-      : MOCK_GAMES.filter((g) => g.league === activeLeague);
+    const games =
+      activeLeague === "all"
+        ? MOCK_GAMES
+        : MOCK_GAMES.filter((g) => g.league === activeLeague);
 
     const statusOrder = { live: 0, scheduled: 1, final: 2 };
     const localTeams = localMarket?.teams || [];
@@ -48,7 +178,6 @@ const LiveSports = () => {
     return [...games].sort((a, b) => {
       const aLocal = isLocalGame(a.homeAbbr, a.awayAbbr, localTeams) ? 0 : 1;
       const bLocal = isLocalGame(b.homeAbbr, b.awayAbbr, localTeams) ? 0 : 1;
-      // Local games first, then by status
       if (aLocal !== bLocal) return aLocal - bLocal;
       return statusOrder[a.status] - statusOrder[b.status];
     });
@@ -113,7 +242,6 @@ const LiveSports = () => {
             <p className="text-sm text-muted-foreground max-w-lg">
               Today's games across NFL, NBA & more. Follow a game to get alerted 15 minutes before it starts.
             </p>
-            {/* Location indicator */}
             {location.city && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -122,7 +250,8 @@ const LiveSports = () => {
               >
                 <MapPin className="h-3 w-3 text-primary" />
                 <span className="text-xs font-medium text-primary">
-                  {location.city}{location.state ? `, ${location.state}` : ""}
+                  {location.city}
+                  {location.state ? `, ${location.state}` : ""}
                 </span>
               </motion.div>
             )}
@@ -132,11 +261,8 @@ const LiveSports = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
-        {user && (
-          <SeasonPassTracker followedGameLeagues={followedByLeague} />
-        )}
+        {user && <SeasonPassTracker followedGameLeagues={followedByLeague} />}
 
-        {/* Local team prioritization notice */}
         {localMarket && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -145,54 +271,71 @@ const LiveSports = () => {
           >
             <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
             <span>
-              Showing <span className="font-semibold text-foreground">{localMarket.city}</span> teams first.
-              {localMarket.blackoutBroadcasters.length > 0 && " Regional blackout restrictions may apply to local games."}
+              Showing{" "}
+              <span className="font-semibold text-foreground">{localMarket.city}</span> teams
+              first.
+              {localMarket.blackoutBroadcasters.length > 0 &&
+                " Regional blackout restrictions may apply to local games."}
             </span>
           </motion.div>
         )}
 
-        <Tabs value={activeLeague} onValueChange={setActiveLeague}>
-          <TabsList className="mb-6 bg-muted/50 flex-wrap h-auto gap-1 p-1">
-            {LEAGUES.map((l) => (
-              <TabsTrigger key={l.value} value={l.value} className="text-sm">
-                {l.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        {/* Sport category filters */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setActiveLeague("all")}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              activeLeague === "all"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            All Sports
+          </button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredGames.map((game, i) => {
-              const gameIsLocal = localMarket
-                ? isLocalGame(game.homeAbbr, game.awayAbbr, localMarket.teams)
-                : false;
-              const gameIsBlackedOut = isBlackedOut(
-                game.broadcaster,
-                game.status,
-                localMarket,
-                gameIsLocal
-              );
-              return (
-                <ScoreboardCard
-                  key={game.id}
-                  game={game}
-                  index={i}
-                  isFollowed={followedGames.has(game.id)}
-                  onFollow={handleFollow}
-                  onUnfollow={handleUnfollow}
-                  isLocalGame={gameIsLocal}
-                  isBlackedOut={gameIsBlackedOut}
-                />
-              );
-            })}
+          {SPORT_CATEGORIES.map((cat) => (
+            <SportDropdown
+              key={cat.label}
+              category={cat}
+              activeLeague={activeLeague}
+              onSelect={setActiveLeague}
+            />
+          ))}
+        </div>
+
+        {/* Games grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredGames.map((game, i) => {
+            const gameIsLocal = localMarket
+              ? isLocalGame(game.homeAbbr, game.awayAbbr, localMarket.teams)
+              : false;
+            const gameIsBlackedOut = isBlackedOut(
+              game.broadcaster,
+              game.status,
+              localMarket,
+              gameIsLocal
+            );
+            return (
+              <ScoreboardCard
+                key={game.id}
+                game={game}
+                index={i}
+                isFollowed={followedGames.has(game.id)}
+                onFollow={handleFollow}
+                onUnfollow={handleUnfollow}
+                isLocalGame={gameIsLocal}
+                isBlackedOut={gameIsBlackedOut}
+              />
+            );
+          })}
+        </div>
+
+        {filteredGames.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">
+            <Zap className="h-8 w-8 mx-auto mb-3 opacity-40" />
+            <p className="text-sm">No games scheduled for this league today.</p>
           </div>
-
-          {filteredGames.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground">
-              <Zap className="h-8 w-8 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No games scheduled for this league today.</p>
-            </div>
-          )}
-        </Tabs>
+        )}
       </div>
     </div>
   );
