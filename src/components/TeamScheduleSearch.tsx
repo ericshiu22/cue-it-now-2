@@ -38,10 +38,10 @@ const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceId
 
   const filtered = useMemo(() => {
     if (!query.trim()) return [];
-    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     return ALL_SPORTS_TEAMS.filter((t) => {
-      const haystack = `${t.name} ${t.abbr} ${t.league}`.toLowerCase();
-      return words.every((w) => haystack.includes(w));
+      const words = `${t.name} ${t.abbr} ${t.league}`.toLowerCase().split(/\s+/);
+      return terms.every((term) => words.some((w) => w.startsWith(term)));
     }).slice(0, 12);
   }, [query]);
 
