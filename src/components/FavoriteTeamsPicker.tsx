@@ -4,32 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MOCK_GAMES } from "@/lib/mock-sports-data";
+import { ALL_SPORTS_TEAMS } from "@/lib/all-sports-teams";
 import type { FavoriteTeam } from "@/hooks/useFavoriteTeams";
-
-interface TeamOption {
-  abbr: string;
-  name: string;
-  league: string;
-  emoji: string;
-}
-
-const ALL_TEAMS: TeamOption[] = (() => {
-  const seen = new Set<string>();
-  const teams: TeamOption[] = [];
-  for (const g of MOCK_GAMES) {
-    if (g.isEvent) continue;
-    for (const side of ["home", "away"] as const) {
-      const abbr = side === "home" ? g.homeAbbr : g.awayAbbr;
-      const name = side === "home" ? g.homeTeam : g.awayTeam;
-      if (!seen.has(abbr)) {
-        seen.add(abbr);
-        teams.push({ abbr, name, league: g.league, emoji: g.homeLogo });
-      }
-    }
-  }
-  return teams.sort((a, b) => a.name.localeCompare(b.name));
-})();
 
 interface Props {
   favorites: FavoriteTeam[];
@@ -43,9 +19,9 @@ const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite }: Props) 
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return ALL_TEAMS;
+    if (!query.trim()) return ALL_SPORTS_TEAMS;
     const q = query.toLowerCase();
-    return ALL_TEAMS.filter(
+    return ALL_SPORTS_TEAMS.filter(
       (t) =>
         t.name.toLowerCase().includes(q) ||
         t.abbr.toLowerCase().includes(q) ||
