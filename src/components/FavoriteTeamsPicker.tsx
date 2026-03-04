@@ -20,10 +20,10 @@ const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite }: Props) 
 
   const filtered = useMemo(() => {
     if (!query.trim()) return ALL_SPORTS_TEAMS;
-    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     return ALL_SPORTS_TEAMS.filter((t) => {
-      const haystack = `${t.name} ${t.abbr} ${t.league}`.toLowerCase();
-      return words.every((w) => haystack.includes(w));
+      const words = `${t.name} ${t.abbr} ${t.league}`.toLowerCase().split(/\s+/);
+      return terms.every((term) => words.some((w) => w.startsWith(term)));
     });
   }, [query]);
 
