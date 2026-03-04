@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, ArrowLeft, MapPin, Tv, BellOff, Play } from "lucide-react";
+import { Calendar, ArrowLeft, MapPin, Tv, BellOff, Play, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
@@ -16,6 +16,9 @@ interface Props {
   onFollow: (gameId: string) => void;
   onUnfollow: (gameId: string) => void;
   userServiceIds: Set<string>;
+  isFavorite: (abbr: string) => boolean;
+  onAddFavorite: (abbr: string, league: string) => void;
+  onRemoveFavorite: (abbr: string) => void;
 }
 
 const formatDate = (iso: string) => {
@@ -28,7 +31,7 @@ const formatTime = (iso: string) => {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 };
 
-const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceIds }: Props) => {
+const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceIds, isFavorite, onAddFavorite, onRemoveFavorite }: Props) => {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<TeamOption | null>(null);
@@ -123,22 +126,44 @@ const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceId
             exit={{ opacity: 0, y: -4 }}
             className="rounded-lg border border-border/50 bg-muted/30 p-2 space-y-0.5"
           >
-            {filtered.map((team) => (
-              <button
-                key={`${team.abbr}-${team.league}`}
-                onClick={() => { setSelectedTeam(team); setQuery(""); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left hover:bg-muted transition-colors"
-              >
-                <span className="text-base">{team.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{team.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{team.league}</p>
+          {filtered.map((team) => {
+              const fav = isFavorite(team.abbr);
+              return (
+                <div
+                  key={`${team.abbr}-${team.league}`}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left hover:bg-muted transition-colors"
+                >
+                  <button
+                    onClick={() => { setSelectedTeam(team); setQuery(""); }}
+                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                  >
+                    <span className="text-base">{team.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{team.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{team.league}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
+                      {team.abbr}
+                    </Badge>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (fav) onRemoveFavorite(team.abbr);
+                      else onAddFavorite(team.abbr, team.league);
+                    }}
+                    className={`shrink-0 p-1.5 rounded-md transition-colors ${
+                      fav
+                        ? "text-primary bg-primary/10 hover:bg-primary/20"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                    title={fav ? "Remove from favorites" : "Add to favorites"}
+                  >
+                    <Star className={`h-3.5 w-3.5 ${fav ? "fill-current" : ""}`} />
+                  </button>
                 </div>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
-                  {team.abbr}
-                </Badge>
-              </button>
-            ))}
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>

@@ -311,6 +311,9 @@ const LiveSports = () => {
           onFollow={handleFollow}
           onUnfollow={handleUnfollow}
           userServiceIds={userServiceIds}
+          isFavorite={isFavorite}
+          onAddFavorite={addFavorite}
+          onRemoveFavorite={removeFavorite}
         />
 
         {localMarket && (
