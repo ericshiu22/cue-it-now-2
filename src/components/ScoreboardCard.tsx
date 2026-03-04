@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Bell, BellOff, Tv, Flag, MapPin, ShieldAlert } from "lucide-react";
+import { Bell, BellOff, Tv, Flag, MapPin, ShieldAlert, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,7 @@ interface ScoreboardCardProps {
   onUnfollow: (gameId: string) => void;
   isLocalGame?: boolean;
   isBlackedOut?: boolean;
+  isFavoriteGame?: boolean;
   watchmodeSources?: Record<number, WatchmodeSourceInfo> | null;
 }
 
@@ -103,7 +104,14 @@ const BlackoutBadge = () => (
   </TooltipProvider>
 );
 
-const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocalGame: isLocal, isBlackedOut: blackout, watchmodeSources }: ScoreboardCardProps) => {
+const FavoriteBadge = () => (
+  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-accent/50 text-accent-foreground border-accent/50 gap-0.5">
+    <Star className="h-2.5 w-2.5 fill-current" />
+    Favorite
+  </Badge>
+);
+
+const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocalGame: isLocal, isBlackedOut: blackout, isFavoriteGame: isFav, watchmodeSources }: ScoreboardCardProps) => {
   const { user } = useAuth();
   const service = getService(game.streamingService);
   const isLive = game.status === "live";
@@ -160,6 +168,7 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
             {game.league}
           </Badge>
           {isLocal && <LocalBadge />}
+          {isFav && !isLocal && <FavoriteBadge />}
           {blackout && <BlackoutBadge />}
           {isFinal && <span className="text-[11px] text-muted-foreground font-medium">Final</span>}
           {!isLive && !isFinal && <span className="text-[11px] text-muted-foreground">{formatTime(game.startTime)}</span>}
@@ -240,8 +249,9 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
         <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${leagueBadgeColors[game.league]}`}>
           {game.league}
         </Badge>
-        {isLocal && <LocalBadge />}
-        {blackout && <BlackoutBadge />}
+          {isLocal && <LocalBadge />}
+          {isFav && !isLocal && <FavoriteBadge />}
+          {blackout && <BlackoutBadge />}
         {isFinal && <span className="text-[11px] text-muted-foreground font-medium">Final</span>}
         {!isLive && !isFinal && <span className="text-[11px] text-muted-foreground">{formatTime(game.startTime)}</span>}
         {isLive && game.period && (
