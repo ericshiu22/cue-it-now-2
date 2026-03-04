@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import SubscriptionHub from "./pages/SubscriptionHub";
+import LiveSports from "./pages/LiveSports";
 import EmailPreview from "./pages/EmailPreview";
 import NotFound from "./pages/NotFound";
 
@@ -46,6 +47,7 @@ const App = () => {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/live-sports" element={<LiveSports />} />
                 <Route path="/subscriptions" element={<SubscriptionHub />} />
                 <Route path="/email-preview" element={<EmailPreview />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
