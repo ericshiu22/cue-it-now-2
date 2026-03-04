@@ -22,6 +22,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import SeasonEndModal from "@/components/SeasonEndModal";
 
 interface ActiveSub {
   id: string;
@@ -64,6 +65,15 @@ const SubscriptionHub = () => {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const pendingDeleteSub = subs.find((s) => s.id === pendingDeleteId);
 
+  /* ── Season end alert state ── */
+  const [seasonEndAlert, setSeasonEndAlert] = useState<{
+    league: string;
+    seasonName: string;
+    streamingService: string;
+    seasonEndDate: string;
+    monthlyCost?: number;
+  } | null>(null);
+
   /* ── Fetch all data ── */
   useEffect(() => {
     if (!user) { setProfileLoading(false); return; }
@@ -80,6 +90,38 @@ const SubscriptionHub = () => {
     };
     fetchAll();
   }, [user]);
+
+  // Check for ending season passes
+  useEffect(() => {
+    if (!user) return;
+    const checkSeasonPasses = async () => {
+      const { data: passes } = await supabase
+        .from("season_passes")
+        .select("*")
+        .eq("is_active", true) as any;
+      if (!passes || passes.length === 0) return;
+
+      const now = new Date();
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      for (const pass of passes) {
+        const endDate = new Date(pass.season_end);
+        if (endDate.getTime() - now.getTime() <= sevenDays && endDate.getTime() > now.getTime()) {
+          const matchingSub = subs.find(
+            (s) => s.service_name.toLowerCase() === pass.streaming_service.toLowerCase()
+          );
+          setSeasonEndAlert({
+            league: pass.league,
+            seasonName: pass.season_name,
+            streamingService: pass.streaming_service,
+            seasonEndDate: pass.season_end,
+            monthlyCost: matchingSub ? Number(matchingSub.monthly_cost) : undefined,
+          });
+          break;
+        }
+      }
+    };
+    checkSeasonPasses();
+  }, [user, subs]);
 
   const addSubscription = async () => {
     if (!user || !newService) return;
@@ -493,6 +535,27 @@ const SubscriptionHub = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Season End Alert Modal */}
+      <SeasonEndModal
+        open={!!seasonEndAlert}
+        onClose={() => setSeasonEndAlert(null)}
+        league={seasonEndAlert?.league || ""}
+        seasonName={seasonEndAlert?.seasonName || ""}
+        streamingService={seasonEndAlert?.streamingService || ""}
+        monthlyCost={seasonEndAlert?.monthlyCost}
+        seasonEndDate={seasonEndAlert?.seasonEndDate || ""}
+        onScheduleCancel={() => {
+          const service = getService(seasonEndAlert?.streamingService || "");
+          if (service?.cancelUrl) window.open(service.cancelUrl, "_blank");
+          toast.success("Cancellation reminder set! We'll remind you after the season ends.");
+          setSeasonEndAlert(null);
+        }}
+        onKeep={() => {
+          toast("Great! We'll keep tracking your subscription.");
+          setSeasonEndAlert(null);
+        }}
+      />
     </div>
   );
 };

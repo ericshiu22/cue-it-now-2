@@ -313,6 +313,45 @@ export type Database = {
         }
         Relationships: []
       }
+      season_passes: {
+        Row: {
+          created_at: string
+          games_followed: number
+          id: string
+          is_active: boolean
+          league: string
+          season_end: string
+          season_name: string
+          season_start: string
+          streaming_service: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          games_followed?: number
+          id?: string
+          is_active?: boolean
+          league: string
+          season_end: string
+          season_name: string
+          season_start: string
+          streaming_service: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          games_followed?: number
+          id?: string
+          is_active?: boolean
+          league?: string
+          season_end?: string
+          season_name?: string
+          season_start?: string
+          streaming_service?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_credentials: {
         Row: {
           created_at: string
