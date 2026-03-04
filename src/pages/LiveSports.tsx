@@ -10,6 +10,7 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import { useWatchmode } from "@/hooks/useWatchmode";
 import { useFavoriteTeams } from "@/hooks/useFavoriteTeams";
 import { findLocalMarket, isLocalGame, isBlackedOut } from "@/lib/local-sports-data";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface SportCategory {
@@ -170,6 +171,21 @@ const LiveSports = () => {
   const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
   const { sources: watchmodeSources, loading: watchmodeLoading } = useWatchmode("US");
   const { favorites, addFavorite, removeFavorite, isFavorite, favoriteAbbrs } = useFavoriteTeams();
+
+  // Fetch user's active subscriptions
+  const [userServiceIds, setUserServiceIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!user) { setUserServiceIds(new Set()); return; }
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("active_subscriptions")
+        .select("service_name")
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+      if (data) setUserServiceIds(new Set(data.map((s) => s.service_name.toLowerCase())));
+    };
+    fetch();
+  }, [user]);
 
   const filteredGames = useMemo(() => {
     const games =
@@ -352,6 +368,7 @@ const LiveSports = () => {
                 isLocalGame={gameIsLocal}
                 isBlackedOut={gameIsBlackedOut}
                 isFavoriteGame={gameIsFavorite}
+                userHasService={userServiceIds.has(game.streamingService.toLowerCase())}
                 watchmodeSources={watchmodeSources}
               />
             );
