@@ -199,6 +199,48 @@ export type Database = {
         }
         Relationships: []
       }
+      game_follows: {
+        Row: {
+          alert_sent: boolean
+          away_team: string
+          broadcaster: string | null
+          created_at: string
+          game_external_id: string
+          home_team: string
+          id: string
+          league: string
+          start_time: string
+          streaming_service: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_sent?: boolean
+          away_team: string
+          broadcaster?: string | null
+          created_at?: string
+          game_external_id: string
+          home_team: string
+          id?: string
+          league: string
+          start_time: string
+          streaming_service?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_sent?: boolean
+          away_team?: string
+          broadcaster?: string | null
+          created_at?: string
+          game_external_id?: string
+          home_team?: string
+          id?: string
+          league?: string
+          start_time?: string
+          streaming_service?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           alert_type: string

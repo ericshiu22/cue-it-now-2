@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ListVideo, LogOut, Search, Settings, User, Users, Wallet, Compass, Radio, Play } from "lucide-react";
+import { ListVideo, LogOut, Search, Settings, User, Users, Wallet, Compass, Radio, Play, Trophy } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import cueLogo from "@/assets/cue-it-logo.png";
@@ -76,6 +76,18 @@ const Navbar = () => {
           >
             <Users className="h-4 w-4 inline mr-1.5 -mt-0.5" />
             Friends
+          </Link>
+
+          <Link
+            to="/live-sports"
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              location.pathname === "/live-sports"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Trophy className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+            Live Sports
           </Link>
 
           <Link
