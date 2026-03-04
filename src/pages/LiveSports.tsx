@@ -23,6 +23,11 @@ const LEAGUES: { value: string; label: string }[] = [
   { value: "F1", label: "🏎️ F1" },
   { value: "NASCAR", label: "🏁 NASCAR" },
   { value: "Golf", label: "⛳ Golf" },
+  { value: "MLS", label: "⚽ MLS" },
+  { value: "Liga MX", label: "⚽ Liga MX" },
+  { value: "EPL", label: "⚽ EPL" },
+  { value: "La Liga", label: "⚽ La Liga" },
+  { value: "UCL", label: "⚽ UCL" },
 ];
 
 const LiveSports = () => {
