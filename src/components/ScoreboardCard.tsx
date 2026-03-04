@@ -35,6 +35,11 @@ const leagueColors: Record<string, string> = {
   F1: "from-red-600/20 to-red-700/5",
   NASCAR: "from-yellow-500/20 to-yellow-600/5",
   Golf: "from-emerald-500/20 to-emerald-600/5",
+  MLS: "from-teal-500/20 to-teal-600/5",
+  "Liga MX": "from-lime-500/20 to-lime-600/5",
+  EPL: "from-purple-500/20 to-purple-600/5",
+  "La Liga": "from-amber-500/20 to-amber-600/5",
+  UCL: "from-sky-500/20 to-sky-600/5",
 };
 
 const leagueBadgeColors: Record<string, string> = {
@@ -49,6 +54,11 @@ const leagueBadgeColors: Record<string, string> = {
   F1: "bg-red-600/20 text-red-300 border-red-600/30",
   NASCAR: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
   Golf: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  MLS: "bg-teal-500/20 text-teal-300 border-teal-500/30",
+  "Liga MX": "bg-lime-500/20 text-lime-300 border-lime-500/30",
+  EPL: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  "La Liga": "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  UCL: "bg-sky-500/20 text-sky-300 border-sky-500/30",
 };
 
 const LocalBadge = () => (

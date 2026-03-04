@@ -1,5 +1,5 @@
 export type GameStatus = "scheduled" | "live" | "final";
-export type League = "NFL" | "NBA" | "MLB" | "NHL" | "NCAAF" | "WNBA" | "NCAAM" | "NCAAW" | "F1" | "NASCAR" | "Golf";
+export type League = "NFL" | "NBA" | "MLB" | "NHL" | "NCAAF" | "WNBA" | "NCAAM" | "NCAAW" | "F1" | "NASCAR" | "Golf" | "MLS" | "Liga MX" | "EPL" | "La Liga" | "UCL";
 
 export interface GameData {
   id: string;
@@ -49,6 +49,11 @@ export const SEASON_DATA: Record<string, SeasonInfo> = {
   F1: { name: "2026 F1 World Championship", league: "F1", primaryService: "hulu", startDate: "2026-03-15", endDate: "2026-12-06" },
   NASCAR: { name: "2026 NASCAR Cup Series", league: "NASCAR", primaryService: "peacock", startDate: "2026-02-15", endDate: "2026-11-08" },
   Golf: { name: "2026 PGA Tour", league: "Golf", primaryService: "peacock", startDate: "2026-01-08", endDate: "2026-08-30" },
+  MLS: { name: "2026 MLS Season", league: "MLS", primaryService: "appletv", startDate: "2026-02-22", endDate: "2026-11-09" },
+  "Liga MX": { name: "2026 Liga MX Clausura", league: "Liga MX", primaryService: "peacock", startDate: "2026-01-10", endDate: "2026-05-25" },
+  EPL: { name: "2025–26 Premier League", league: "EPL", primaryService: "peacock", startDate: "2025-08-16", endDate: "2026-05-24" },
+  "La Liga": { name: "2025–26 La Liga", league: "La Liga", primaryService: "hulu", startDate: "2025-08-15", endDate: "2026-05-24" },
+  UCL: { name: "2025–26 Champions League", league: "UCL", primaryService: "paramount", startDate: "2025-09-17", endDate: "2026-05-30" },
 };
 
 export const MOCK_GAMES: GameData[] = [
@@ -215,5 +220,87 @@ export const MOCK_GAMES: GameData[] = [
     status: "scheduled", startTime: later(20),
     broadcaster: "NBC", streamingService: "peacock",
     isEvent: true, eventName: "U.S. Open", eventRound: "Round 1",
+  },
+  // ── MLS ──
+  {
+    id: "mls-1", league: "MLS",
+    homeTeam: "LAFC", homeAbbr: "LAFC", homeLogo: "⚽", homeScore: 2,
+    awayTeam: "Inter Miami CF", awayAbbr: "MIA", awayLogo: "⚽", awayScore: 2,
+    status: "live", startTime: ago(1), period: "2nd Half", clock: "72'",
+    broadcaster: "Apple TV+", streamingService: "appletv",
+  },
+  {
+    id: "mls-2", league: "MLS",
+    homeTeam: "LA Galaxy", homeAbbr: "LAG", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Seattle Sounders", awayAbbr: "SEA", awayLogo: "⚽", awayScore: null,
+    status: "scheduled", startTime: later(4),
+    broadcaster: "Apple TV+", streamingService: "appletv",
+  },
+  {
+    id: "mls-3", league: "MLS",
+    homeTeam: "Atlanta United", homeAbbr: "ATL", homeLogo: "⚽", homeScore: 1,
+    awayTeam: "NYCFC", awayAbbr: "NYC", awayLogo: "⚽", awayScore: 3,
+    status: "final", startTime: ago(4),
+    broadcaster: "Apple TV+", streamingService: "appletv",
+  },
+  // ── Liga MX ──
+  {
+    id: "ligamx-1", league: "Liga MX",
+    homeTeam: "Club América", homeAbbr: "AME", homeLogo: "⚽", homeScore: 1,
+    awayTeam: "Chivas Guadalajara", awayAbbr: "CHI", awayLogo: "⚽", awayScore: 0,
+    status: "live", startTime: ago(0.75), period: "2nd Half", clock: "58'",
+    broadcaster: "Telemundo", streamingService: "peacock",
+  },
+  {
+    id: "ligamx-2", league: "Liga MX",
+    homeTeam: "Tigres UANL", homeAbbr: "TIG", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Monterrey", awayAbbr: "MTY", awayLogo: "⚽", awayScore: null,
+    status: "scheduled", startTime: later(5),
+    broadcaster: "Univision", streamingService: "peacock",
+  },
+  // ── EPL (English Premier League) ──
+  {
+    id: "epl-1", league: "EPL",
+    homeTeam: "Arsenal", homeAbbr: "ARS", homeLogo: "⚽", homeScore: 3,
+    awayTeam: "Manchester United", awayAbbr: "MUN", awayLogo: "⚽", awayScore: 1,
+    status: "final", startTime: ago(5),
+    broadcaster: "NBC", streamingService: "peacock",
+  },
+  {
+    id: "epl-2", league: "EPL",
+    homeTeam: "Liverpool", homeAbbr: "LIV", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Chelsea", awayAbbr: "CHE", awayLogo: "⚽", awayScore: null,
+    status: "scheduled", startTime: later(18),
+    broadcaster: "Peacock", streamingService: "peacock",
+  },
+  // ── La Liga ──
+  {
+    id: "laliga-1", league: "La Liga",
+    homeTeam: "Real Madrid", homeAbbr: "RMA", homeLogo: "⚽", homeScore: 2,
+    awayTeam: "FC Barcelona", awayAbbr: "FCB", awayLogo: "⚽", awayScore: 2,
+    status: "live", startTime: ago(1.5), period: "2nd Half", clock: "81'",
+    broadcaster: "ESPN+", streamingService: "hulu",
+  },
+  {
+    id: "laliga-2", league: "La Liga",
+    homeTeam: "Atlético Madrid", homeAbbr: "ATM", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Sevilla", awayAbbr: "SEV", awayLogo: "⚽", awayScore: null,
+    status: "scheduled", startTime: later(22),
+    broadcaster: "ESPN+", streamingService: "hulu",
+  },
+  // ── UCL (Champions League) ──
+  {
+    id: "ucl-1", league: "UCL",
+    homeTeam: "Bayern Munich", homeAbbr: "BAY", homeLogo: "⚽", homeScore: 1,
+    awayTeam: "Paris Saint-Germain", awayAbbr: "PSG", awayLogo: "⚽", awayScore: 0,
+    status: "live", startTime: ago(1), period: "2nd Half", clock: "67'",
+    broadcaster: "CBS", streamingService: "paramount",
+  },
+  {
+    id: "ucl-2", league: "UCL",
+    homeTeam: "Manchester City", homeAbbr: "MCI", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Inter Milan", awayAbbr: "INT", awayLogo: "⚽", awayScore: null,
+    status: "scheduled", startTime: later(24),
+    broadcaster: "CBS", streamingService: "paramount",
   },
 ];

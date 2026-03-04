@@ -42,7 +42,7 @@ export const LOCAL_MARKETS: LocalMarket[] = [
   {
     city: "New York",
     aliases: ["NYC", "Brooklyn", "Queens", "Bronx", "Manhattan", "Staten Island", "Jersey City"],
-    teams: ["NYY", "NYR", "NYL", "NYK", "NYM", "NYG", "NYJ"],
+    teams: ["NYY", "NYR", "NYL", "NYK", "NYM", "NYG", "NYJ", "NYC"],
     blackoutBroadcasters: ["YES Network", "MSG", "SNY"],
   },
   {
@@ -89,6 +89,12 @@ export const LOCAL_MARKETS: LocalMarket[] = [
     aliases: ["Marietta", "Decatur"],
     teams: ["ATL"],
     blackoutBroadcasters: ["Bally Sports South"],
+  },
+  {
+    city: "Seattle",
+    aliases: ["Tacoma", "Bellevue", "Redmond"],
+    teams: ["SEA"],
+    blackoutBroadcasters: ["ROOT Sports Northwest"],
   },
   {
     city: "Miami",
