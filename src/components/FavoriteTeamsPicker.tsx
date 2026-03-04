@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react";
-import { Star, X, ChevronDown, Search } from "lucide-react";
+import { Star, X, ChevronDown, Search, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ALL_SPORTS_TEAMS } from "@/lib/all-sports-teams";
+import { ALL_SPORTS_TEAMS, type TeamOption } from "@/lib/all-sports-teams";
 import type { FavoriteTeam } from "@/hooks/useFavoriteTeams";
 
 interface Props {
@@ -12,9 +12,10 @@ interface Props {
   onAdd: (abbr: string, league: string) => void;
   onRemove: (abbr: string) => void;
   isFavorite: (abbr: string) => boolean;
+  onViewSchedule?: (team: TeamOption) => void;
 }
 
-const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite }: Props) => {
+const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite, onViewSchedule }: Props) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -42,23 +43,36 @@ const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite }: Props) 
         </Button>
 
         <AnimatePresence>
-          {favorites.map((f) => (
-            <motion.div
-              key={`${f.team_abbr}-${f.league}`}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-            >
-              <Badge
-                variant="outline"
-                className="text-xs px-2 py-0.5 gap-1 bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20"
-                onClick={() => onRemove(f.team_abbr)}
+          {favorites.map((f) => {
+            const teamData = ALL_SPORTS_TEAMS.find((t) => t.abbr === f.team_abbr && t.league === f.league);
+            return (
+              <motion.div
+                key={`${f.team_abbr}-${f.league}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-0.5"
               >
-                ⭐ {f.team_abbr}
-                <X className="h-3 w-3 ml-0.5" />
-              </Badge>
-            </motion.div>
-          ))}
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2 py-0.5 gap-1 bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20 rounded-r-none border-r-0"
+                  onClick={() => onRemove(f.team_abbr)}
+                >
+                  ⭐ {f.team_abbr}
+                  <X className="h-3 w-3 ml-0.5" />
+                </Badge>
+                {onViewSchedule && teamData && (
+                  <button
+                    onClick={() => onViewSchedule(teamData)}
+                    className="h-[22px] px-1.5 rounded-r-md border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    title={`View ${teamData.name} schedule`}
+                  >
+                    <Calendar className="h-3 w-3" />
+                  </button>
+                )}
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 
