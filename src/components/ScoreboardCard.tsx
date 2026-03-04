@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Bell, BellOff, Tv, Flag, MapPin, ShieldAlert, Star } from "lucide-react";
+import { Bell, BellOff, Tv, Flag, MapPin, ShieldAlert, Star, Play, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -117,6 +117,15 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
   const isLive = game.status === "live";
   const isFinal = game.status === "final";
 
+  // Within 15 min of start or already started/live
+  const isWatchable = useMemo(() => {
+    if (isLive) return true;
+    if (isFinal) return false;
+    const startMs = new Date(game.startTime).getTime();
+    const nowMs = Date.now();
+    return startMs - nowMs <= 15 * 60 * 1000;
+  }, [game.startTime, isLive, isFinal]);
+
   // Find Watchmode logo for the streaming service
   const watchmodeLogo = useMemo(() => {
     if (!watchmodeSources) return null;
@@ -211,17 +220,28 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
               </Badge>
             ) : null}
           </div>
-          {!isFinal && (
-            <Button
-              size="sm"
-              variant={isFollowed ? "secondary" : "default"}
-              className={`h-7 text-xs gap-1 ${isFollowed ? "" : "bg-gradient-brand text-primary-foreground hover:opacity-90"}`}
-              onClick={handleFollow}
-            >
-              {isFollowed ? <BellOff className="h-3 w-3" /> : <Bell className="h-3 w-3" />}
-              {isFollowed ? "Following" : "Follow"}
-            </Button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {!isFinal && isWatchable ? (
+              <Button
+                size="sm"
+                className="h-7 text-xs gap-1 bg-gradient-brand text-primary-foreground hover:opacity-90"
+                onClick={() => toast.info(`Tune in on ${game.broadcaster}${service ? ` (${service.name})` : ""}`)}
+              >
+                <Play className="h-3 w-3" />
+                Watch Now
+              </Button>
+            ) : !isFinal ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                onClick={handleFollow}
+              >
+                {isFollowed ? <BellOff className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                {isFollowed ? "Following" : "Cue It"}
+              </Button>
+            ) : null}
+          </div>
         </div>
       </motion.div>
     );
@@ -301,17 +321,28 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
             </Badge>
           ) : null}
         </div>
-        {!isFinal && (
-          <Button
-            size="sm"
-            variant={isFollowed ? "secondary" : "default"}
-            className={`h-7 text-xs gap-1 ${isFollowed ? "" : "bg-gradient-brand text-primary-foreground hover:opacity-90"}`}
-            onClick={handleFollow}
-          >
-            {isFollowed ? <BellOff className="h-3 w-3" /> : <Bell className="h-3 w-3" />}
-            {isFollowed ? "Following" : "Follow"}
-          </Button>
-        )}
+        <div className="flex items-center gap-1.5">
+          {!isFinal && isWatchable ? (
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1 bg-gradient-brand text-primary-foreground hover:opacity-90"
+              onClick={() => toast.info(`Tune in on ${game.broadcaster}${service ? ` (${service.name})` : ""}`)}
+            >
+              <Play className="h-3 w-3" />
+              Watch Now
+            </Button>
+          ) : !isFinal ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
+              onClick={handleFollow}
+            >
+              {isFollowed ? <BellOff className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+              {isFollowed ? "Following" : "Cue It"}
+            </Button>
+          ) : null}
+        </div>
       </div>
     </motion.div>
   );
