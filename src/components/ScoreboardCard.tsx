@@ -1,11 +1,17 @@
 import { motion } from "framer-motion";
-import { Bell, BellOff, Tv, Flag } from "lucide-react";
+import { Bell, BellOff, Tv, Flag, MapPin, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { GameData } from "@/lib/mock-sports-data";
 import { getService } from "@/lib/streaming-services";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ScoreboardCardProps {
   game: GameData;
@@ -13,6 +19,8 @@ interface ScoreboardCardProps {
   isFollowed: boolean;
   onFollow: (gameId: string) => void;
   onUnfollow: (gameId: string) => void;
+  isLocalGame?: boolean;
+  isBlackedOut?: boolean;
 }
 
 const leagueColors: Record<string, string> = {
@@ -43,7 +51,39 @@ const leagueBadgeColors: Record<string, string> = {
   Golf: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
 };
 
-const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: ScoreboardCardProps) => {
+const LocalBadge = () => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30 gap-0.5">
+          <MapPin className="h-2.5 w-2.5" />
+          Local
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">
+        Your local team based on your current location
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
+const BlackoutBadge = () => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-destructive/10 text-destructive border-destructive/30 gap-0.5">
+          <ShieldAlert className="h-2.5 w-2.5" />
+          Blackout
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs max-w-[200px]">
+        This game may be blacked out on streaming in your area due to regional broadcast restrictions
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
+const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocalGame: isLocal, isBlackedOut: blackout }: ScoreboardCardProps) => {
   const { user } = useAuth();
   const service = getService(game.streamingService);
   const isLive = game.status === "live";
@@ -63,6 +103,8 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: Score
     else onFollow(game.id);
   };
 
+  const localHighlight = isLocal ? "ring-1 ring-primary/25" : "";
+
   // Event-style card (F1, NASCAR, Golf)
   if (game.isEvent) {
     return (
@@ -70,7 +112,7 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: Score
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.07, duration: 0.4 }}
-        className={`relative glass rounded-xl overflow-hidden border border-border/50 hover:border-border transition-all group bg-gradient-to-br ${leagueColors[game.league] || ""}`}
+        className={`relative glass rounded-xl overflow-hidden border border-border/50 hover:border-border transition-all group bg-gradient-to-br ${leagueColors[game.league] || ""} ${localHighlight}`}
       >
         {isLive && (
           <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
@@ -82,10 +124,12 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: Score
           </div>
         )}
 
-        <div className="px-4 pt-3 pb-2 flex items-center gap-2">
+        <div className="px-4 pt-3 pb-2 flex items-center gap-2 flex-wrap">
           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${leagueBadgeColors[game.league]}`}>
             {game.league}
           </Badge>
+          {isLocal && <LocalBadge />}
+          {blackout && <BlackoutBadge />}
           {isFinal && <span className="text-[11px] text-muted-foreground font-medium">Final</span>}
           {!isLive && !isFinal && <span className="text-[11px] text-muted-foreground">{formatTime(game.startTime)}</span>}
           {isLive && game.period && <span className="text-[11px] text-muted-foreground">{game.period}</span>}
@@ -100,7 +144,6 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: Score
             </div>
           </div>
 
-          {/* Featured drivers/players */}
           <div className="flex gap-3 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">{game.homeAbbr}</span>
             <span>vs</span>
@@ -108,7 +151,6 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: Score
             <span className="text-muted-foreground/60">+ field</span>
           </div>
 
-          {/* Position / leader */}
           {game.position && (
             <div className="flex items-center gap-1.5 text-[11px]">
               <Flag className="h-3 w-3 text-primary" />
@@ -149,7 +191,7 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: Score
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07, duration: 0.4 }}
-      className={`relative glass rounded-xl overflow-hidden border border-border/50 hover:border-border transition-all group bg-gradient-to-br ${leagueColors[game.league] || ""}`}
+      className={`relative glass rounded-xl overflow-hidden border border-border/50 hover:border-border transition-all group bg-gradient-to-br ${leagueColors[game.league] || ""} ${localHighlight}`}
     >
       {isLive && (
         <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
@@ -161,10 +203,12 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow }: Score
         </div>
       )}
 
-      <div className="px-4 pt-3 pb-2 flex items-center gap-2">
+      <div className="px-4 pt-3 pb-2 flex items-center gap-2 flex-wrap">
         <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${leagueBadgeColors[game.league]}`}>
           {game.league}
         </Badge>
+        {isLocal && <LocalBadge />}
+        {blackout && <BlackoutBadge />}
         {isFinal && <span className="text-[11px] text-muted-foreground font-medium">Final</span>}
         {!isLive && !isFinal && <span className="text-[11px] text-muted-foreground">{formatTime(game.startTime)}</span>}
         {isLive && game.period && (

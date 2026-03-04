@@ -1,11 +1,13 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Zap, Trophy } from "lucide-react";
+import { Zap, Trophy, MapPin } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ScoreboardCard from "@/components/ScoreboardCard";
 import SeasonPassTracker from "@/components/SeasonPassTracker";
-import { MOCK_GAMES, type League } from "@/lib/mock-sports-data";
+import { MOCK_GAMES } from "@/lib/mock-sports-data";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { findLocalMarket, isLocalGame, isBlackedOut } from "@/lib/local-sports-data";
 import { toast } from "sonner";
 
 const LEAGUES: { value: string; label: string }[] = [
@@ -27,19 +29,28 @@ const LiveSports = () => {
   const { user } = useAuth();
   const [activeLeague, setActiveLeague] = useState("all");
   const [followedGames, setFollowedGames] = useState<Set<string>>(new Set());
+  const location = useUserLocation();
+  const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
 
   const filteredGames = useMemo(() => {
     const games = activeLeague === "all"
       ? MOCK_GAMES
       : MOCK_GAMES.filter((g) => g.league === activeLeague);
 
-    const order = { live: 0, scheduled: 1, final: 2 };
-    return [...games].sort((a, b) => order[a.status] - order[b.status]);
-  }, [activeLeague]);
+    const statusOrder = { live: 0, scheduled: 1, final: 2 };
+    const localTeams = localMarket?.teams || [];
+
+    return [...games].sort((a, b) => {
+      const aLocal = isLocalGame(a.homeAbbr, a.awayAbbr, localTeams) ? 0 : 1;
+      const bLocal = isLocalGame(b.homeAbbr, b.awayAbbr, localTeams) ? 0 : 1;
+      // Local games first, then by status
+      if (aLocal !== bLocal) return aLocal - bLocal;
+      return statusOrder[a.status] - statusOrder[b.status];
+    });
+  }, [activeLeague, localMarket]);
 
   const liveCount = MOCK_GAMES.filter((g) => g.status === "live").length;
 
-  // Count followed games per league for season pass auto-detect
   const followedByLeague = useMemo(() => {
     const counts: Record<string, number> = {};
     followedGames.forEach((gameId) => {
@@ -92,17 +103,47 @@ const LiveSports = () => {
               </div>
             )}
           </motion.div>
-          <p className="text-sm text-muted-foreground max-w-lg">
-            Today's games across NFL, NBA & MLB. Follow a game to get alerted 15 minutes before it starts.
-          </p>
+
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground max-w-lg">
+              Today's games across NFL, NBA & more. Follow a game to get alerted 15 minutes before it starts.
+            </p>
+            {/* Location indicator */}
+            {location.city && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 shrink-0"
+              >
+                <MapPin className="h-3 w-3 text-primary" />
+                <span className="text-xs font-medium text-primary">
+                  {location.city}{location.state ? `, ${location.state}` : ""}
+                </span>
+              </motion.div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
-        {/* Season Pass Tracker */}
         {user && (
           <SeasonPassTracker followedGameLeagues={followedByLeague} />
+        )}
+
+        {/* Local team prioritization notice */}
+        {localMarket && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/15 text-xs text-muted-foreground"
+          >
+            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span>
+              Showing <span className="font-semibold text-foreground">{localMarket.city}</span> teams first.
+              {localMarket.blackoutBroadcasters.length > 0 && " Regional blackout restrictions may apply to local games."}
+            </span>
+          </motion.div>
         )}
 
         <Tabs value={activeLeague} onValueChange={setActiveLeague}>
@@ -115,16 +156,29 @@ const LiveSports = () => {
           </TabsList>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredGames.map((game, i) => (
-              <ScoreboardCard
-                key={game.id}
-                game={game}
-                index={i}
-                isFollowed={followedGames.has(game.id)}
-                onFollow={handleFollow}
-                onUnfollow={handleUnfollow}
-              />
-            ))}
+            {filteredGames.map((game, i) => {
+              const gameIsLocal = localMarket
+                ? isLocalGame(game.homeAbbr, game.awayAbbr, localMarket.teams)
+                : false;
+              const gameIsBlackedOut = isBlackedOut(
+                game.broadcaster,
+                game.status,
+                localMarket,
+                gameIsLocal
+              );
+              return (
+                <ScoreboardCard
+                  key={game.id}
+                  game={game}
+                  index={i}
+                  isFollowed={followedGames.has(game.id)}
+                  onFollow={handleFollow}
+                  onUnfollow={handleUnfollow}
+                  isLocalGame={gameIsLocal}
+                  isBlackedOut={gameIsBlackedOut}
+                />
+              );
+            })}
           </div>
 
           {filteredGames.length === 0 && (
