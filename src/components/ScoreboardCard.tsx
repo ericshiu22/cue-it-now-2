@@ -31,6 +31,7 @@ interface ScoreboardCardProps {
   isLocalGame?: boolean;
   isBlackedOut?: boolean;
   isFavoriteGame?: boolean;
+  userHasService?: boolean;
   watchmodeSources?: Record<number, WatchmodeSourceInfo> | null;
 }
 
@@ -111,7 +112,7 @@ const FavoriteBadge = () => (
   </Badge>
 );
 
-const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocalGame: isLocal, isBlackedOut: blackout, isFavoriteGame: isFav, watchmodeSources }: ScoreboardCardProps) => {
+const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocalGame: isLocal, isBlackedOut: blackout, isFavoriteGame: isFav, userHasService, watchmodeSources }: ScoreboardCardProps) => {
   const { user } = useAuth();
   const service = getService(game.streamingService);
   const isLive = game.status === "live";
@@ -221,13 +222,23 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
             ) : null}
           </div>
           <div className="flex items-center gap-1.5">
-            {!isFinal && isWatchable ? (
+            {!isFinal && isWatchable && userHasService ? (
               <Button
                 size="sm"
                 className="h-7 text-xs gap-1 bg-gradient-brand text-primary-foreground hover:opacity-90"
-                onClick={() => toast.info(`Tune in on ${game.broadcaster}${service ? ` (${service.name})` : ""}`)}
+                onClick={() => service ? window.open(service.searchUrl(game.eventName || game.homeTeam), "_blank") : toast.info(`Tune in on ${game.broadcaster}`)}
               >
                 <Play className="h-3 w-3" />
+                Watch Now
+              </Button>
+            ) : !isFinal && isWatchable && !userHasService ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-7 text-xs gap-1"
+                onClick={() => toast.info(`${service?.name || game.streamingService} is not in your subscriptions. Add it in the Subscription Hub.`)}
+              >
+                <Tv className="h-3 w-3" />
                 Watch Now
               </Button>
             ) : !isFinal ? (
@@ -322,13 +333,23 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
           ) : null}
         </div>
         <div className="flex items-center gap-1.5">
-          {!isFinal && isWatchable ? (
+          {!isFinal && isWatchable && userHasService ? (
             <Button
               size="sm"
               className="h-7 text-xs gap-1 bg-gradient-brand text-primary-foreground hover:opacity-90"
-              onClick={() => toast.info(`Tune in on ${game.broadcaster}${service ? ` (${service.name})` : ""}`)}
+              onClick={() => service ? window.open(service.searchUrl(game.homeTeam), "_blank") : toast.info(`Tune in on ${game.broadcaster}`)}
             >
               <Play className="h-3 w-3" />
+              Watch Now
+            </Button>
+          ) : !isFinal && isWatchable && !userHasService ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-7 text-xs gap-1"
+              onClick={() => toast.info(`${service?.name || game.streamingService} is not in your subscriptions. Add it in the Subscription Hub.`)}
+            >
+              <Tv className="h-3 w-3" />
               Watch Now
             </Button>
           ) : !isFinal ? (
