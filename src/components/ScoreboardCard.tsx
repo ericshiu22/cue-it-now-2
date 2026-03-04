@@ -223,34 +223,33 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
           </div>
           <div className="flex items-center gap-1.5">
             {!isFinal && isWatchable && userHasService ? (
-              <Button
-                size="sm"
-                className="h-7 text-xs gap-1 bg-gradient-brand text-primary-foreground hover:opacity-90"
+              <button
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity glow"
                 onClick={() => service ? window.open(service.searchUrl(game.eventName || game.homeTeam), "_blank") : toast.info(`Tune in on ${game.broadcaster}`)}
               >
                 <Play className="h-3 w-3" />
                 Watch Now
-              </Button>
+              </button>
             ) : !isFinal && isWatchable && !userHasService ? (
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-7 text-xs gap-1"
+              <button
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
                 onClick={() => toast.info(`${service?.name || game.streamingService} is not in your subscriptions. Add it in the Subscription Hub.`)}
               >
                 <Tv className="h-3 w-3" />
                 Watch Now
-              </Button>
+              </button>
             ) : !isFinal ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
+              <button
+                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity glow ${
+                  isFollowed
+                    ? "bg-secondary text-foreground"
+                    : "bg-primary text-primary-foreground hover:opacity-90"
+                }`}
                 onClick={handleFollow}
               >
-                {isFollowed ? <BellOff className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                {isFollowed ? <BellOff className="h-3 w-3" /> : <span>🎬</span>}
                 {isFollowed ? "Following" : "Cue It"}
-              </Button>
+              </button>
             ) : null}
           </div>
         </div>
@@ -334,34 +333,33 @@ const ScoreboardCard = ({ game, index, isFollowed, onFollow, onUnfollow, isLocal
         </div>
         <div className="flex items-center gap-1.5">
           {!isFinal && isWatchable && userHasService ? (
-            <Button
-              size="sm"
-              className="h-7 text-xs gap-1 bg-gradient-brand text-primary-foreground hover:opacity-90"
+            <button
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity glow"
               onClick={() => service ? window.open(service.searchUrl(game.homeTeam), "_blank") : toast.info(`Tune in on ${game.broadcaster}`)}
             >
               <Play className="h-3 w-3" />
               Watch Now
-            </Button>
+            </button>
           ) : !isFinal && isWatchable && !userHasService ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-7 text-xs gap-1"
+            <button
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
               onClick={() => toast.info(`${service?.name || game.streamingService} is not in your subscriptions. Add it in the Subscription Hub.`)}
             >
               <Tv className="h-3 w-3" />
               Watch Now
-            </Button>
+            </button>
           ) : !isFinal ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
+            <button
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity glow ${
+                isFollowed
+                  ? "bg-secondary text-foreground"
+                  : "bg-primary text-primary-foreground hover:opacity-90"
+              }`}
               onClick={handleFollow}
             >
-              {isFollowed ? <BellOff className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+              {isFollowed ? <BellOff className="h-3 w-3" /> : <span>🎬</span>}
               {isFollowed ? "Following" : "Cue It"}
-            </Button>
+            </button>
           ) : null}
         </div>
       </div>
