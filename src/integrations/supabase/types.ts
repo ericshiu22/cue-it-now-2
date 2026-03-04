@@ -122,6 +122,30 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_teams: {
+        Row: {
+          created_at: string
+          id: string
+          league: string
+          team_abbr: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          league: string
+          team_abbr: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          league?: string
+          team_abbr?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friend_group_members: {
         Row: {
           created_at: string

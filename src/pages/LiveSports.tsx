@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Trophy, MapPin, ChevronDown, Wifi } from "lucide-react";
 import ScoreboardCard from "@/components/ScoreboardCard";
 import SeasonPassTracker from "@/components/SeasonPassTracker";
+import FavoriteTeamsPicker from "@/components/FavoriteTeamsPicker";
 import { MOCK_GAMES } from "@/lib/mock-sports-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useWatchmode } from "@/hooks/useWatchmode";
+import { useFavoriteTeams } from "@/hooks/useFavoriteTeams";
 import { findLocalMarket, isLocalGame, isBlackedOut } from "@/lib/local-sports-data";
 import { toast } from "sonner";
 
@@ -167,6 +169,7 @@ const LiveSports = () => {
   const location = useUserLocation();
   const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
   const { sources: watchmodeSources, loading: watchmodeLoading } = useWatchmode("US");
+  const { favorites, addFavorite, removeFavorite, isFavorite, favoriteAbbrs } = useFavoriteTeams();
 
   const filteredGames = useMemo(() => {
     const games =
@@ -178,12 +181,17 @@ const LiveSports = () => {
     const localTeams = localMarket?.teams || [];
 
     return [...games].sort((a, b) => {
+      // Favorite teams first
+      const aFav = (favoriteAbbrs.has(a.homeAbbr) || favoriteAbbrs.has(a.awayAbbr)) ? 0 : 1;
+      const bFav = (favoriteAbbrs.has(b.homeAbbr) || favoriteAbbrs.has(b.awayAbbr)) ? 0 : 1;
+      if (aFav !== bFav) return aFav - bFav;
+      // Then local teams
       const aLocal = isLocalGame(a.homeAbbr, a.awayAbbr, localTeams) ? 0 : 1;
       const bLocal = isLocalGame(b.homeAbbr, b.awayAbbr, localTeams) ? 0 : 1;
       if (aLocal !== bLocal) return aLocal - bLocal;
       return statusOrder[a.status] - statusOrder[b.status];
     });
-  }, [activeLeague, localMarket]);
+  }, [activeLeague, localMarket, favoriteAbbrs]);
 
   const liveCount = MOCK_GAMES.filter((g) => g.status === "live").length;
 
@@ -271,6 +279,15 @@ const LiveSports = () => {
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
         {user && <SeasonPassTracker followedGameLeagues={followedByLeague} />}
 
+        {user && (
+          <FavoriteTeamsPicker
+            favorites={favorites}
+            onAdd={addFavorite}
+            onRemove={removeFavorite}
+            isFavorite={isFavorite}
+          />
+        )}
+
         {localMarket && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -323,6 +340,7 @@ const LiveSports = () => {
               localMarket,
               gameIsLocal
             );
+            const gameIsFavorite = favoriteAbbrs.has(game.homeAbbr) || favoriteAbbrs.has(game.awayAbbr);
             return (
               <ScoreboardCard
                 key={game.id}
@@ -333,6 +351,7 @@ const LiveSports = () => {
                 onUnfollow={handleUnfollow}
                 isLocalGame={gameIsLocal}
                 isBlackedOut={gameIsBlackedOut}
+                isFavoriteGame={gameIsFavorite}
                 watchmodeSources={watchmodeSources}
               />
             );
