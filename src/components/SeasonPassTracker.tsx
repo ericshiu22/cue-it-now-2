@@ -23,7 +23,7 @@ interface SeasonPassTrackerProps {
   onSeasonEndAlert?: (pass: SeasonPass) => void;
 }
 
-const LEAGUE_EMOJI: Record<string, string> = { NFL: "🏈", NBA: "🏀", MLB: "⚾" };
+const LEAGUE_EMOJI: Record<string, string> = { NFL: "🏈", NBA: "🏀", MLB: "⚾", NHL: "🏒", NCAAF: "🏈", WNBA: "🏀", NCAAM: "🏀", NCAAW: "🏀", F1: "🏎️", NASCAR: "🏁", Golf: "⛳" };
 
 const SeasonPassTracker = ({ followedGameLeagues = {}, onSeasonEndAlert }: SeasonPassTrackerProps) => {
   const { user } = useAuth();

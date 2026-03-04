@@ -13,6 +13,14 @@ const LEAGUES: { value: string; label: string }[] = [
   { value: "NFL", label: "🏈 NFL" },
   { value: "NBA", label: "🏀 NBA" },
   { value: "MLB", label: "⚾ MLB" },
+  { value: "NHL", label: "🏒 NHL" },
+  { value: "NCAAF", label: "🏈 NCAAF" },
+  { value: "WNBA", label: "🏀 WNBA" },
+  { value: "NCAAM", label: "🏀 NCAAM" },
+  { value: "NCAAW", label: "🏀 NCAAW" },
+  { value: "F1", label: "🏎️ F1" },
+  { value: "NASCAR", label: "🏁 NASCAR" },
+  { value: "Golf", label: "⛳ Golf" },
 ];
 
 const LiveSports = () => {
@@ -98,7 +106,7 @@ const LiveSports = () => {
         )}
 
         <Tabs value={activeLeague} onValueChange={setActiveLeague}>
-          <TabsList className="mb-6 bg-muted/50">
+          <TabsList className="mb-6 bg-muted/50 flex-wrap h-auto gap-1 p-1">
             {LEAGUES.map((l) => (
               <TabsTrigger key={l.value} value={l.value} className="text-sm">
                 {l.label}
