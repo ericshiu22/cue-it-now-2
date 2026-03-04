@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Trophy, MapPin, ChevronDown, Wifi } from "lucide-react";
 import ScoreboardCard from "@/components/ScoreboardCard";
@@ -172,6 +172,13 @@ const LiveSports = () => {
   const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
   const { sources: watchmodeSources, loading: watchmodeLoading } = useWatchmode("US");
   const { favorites, addFavorite, removeFavorite, isFavorite, favoriteAbbrs } = useFavoriteTeams();
+  const [scheduleTeam, setScheduleTeam] = useState<import("@/lib/all-sports-teams").TeamOption | null>(null);
+
+  const handleViewSchedule = useCallback((team: import("@/lib/all-sports-teams").TeamOption) => {
+    setScheduleTeam(null);
+    // Use timeout to allow state reset, then set new team
+    setTimeout(() => setScheduleTeam(team), 0);
+  }, []);
 
   // Fetch user's active subscriptions
   const [userServiceIds, setUserServiceIds] = useState<Set<string>>(new Set());
@@ -302,6 +309,7 @@ const LiveSports = () => {
             onAdd={addFavorite}
             onRemove={removeFavorite}
             isFavorite={isFavorite}
+            onViewSchedule={handleViewSchedule}
           />
         )}
 
@@ -314,6 +322,7 @@ const LiveSports = () => {
           isFavorite={isFavorite}
           onAddFavorite={addFavorite}
           onRemoveFavorite={removeFavorite}
+          externalSelectedTeam={scheduleTeam}
         />
 
         {localMarket && (

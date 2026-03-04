@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ArrowLeft, MapPin, Tv, BellOff, Play, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ interface Props {
   isFavorite: (abbr: string) => boolean;
   onAddFavorite: (abbr: string, league: string) => void;
   onRemoveFavorite: (abbr: string) => void;
+  externalSelectedTeam?: TeamOption | null;
 }
 
 const formatDate = (iso: string) => {
@@ -31,10 +32,18 @@ const formatTime = (iso: string) => {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 };
 
-const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceIds, isFavorite, onAddFavorite, onRemoveFavorite }: Props) => {
+const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceIds, isFavorite, onAddFavorite, onRemoveFavorite, externalSelectedTeam }: Props) => {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<TeamOption | null>(null);
+
+  // Allow parent to set the selected team (e.g. from favorite badge)
+  useEffect(() => {
+    if (externalSelectedTeam) {
+      setSelectedTeam(externalSelectedTeam);
+      setQuery("");
+    }
+  }, [externalSelectedTeam]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return [];
