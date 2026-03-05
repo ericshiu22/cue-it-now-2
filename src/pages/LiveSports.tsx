@@ -1,15 +1,15 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Trophy, MapPin, ChevronDown, Wifi } from "lucide-react";
+import { Zap, Trophy, MapPin, ChevronDown, Wifi, RefreshCw } from "lucide-react";
 import ScoreboardCard from "@/components/ScoreboardCard";
 import SeasonPassTracker from "@/components/SeasonPassTracker";
 import FavoriteTeamsPicker from "@/components/FavoriteTeamsPicker";
 import TeamScheduleSearch from "@/components/TeamScheduleSearch";
-import { MOCK_GAMES } from "@/lib/mock-sports-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useWatchmode } from "@/hooks/useWatchmode";
 import { useFavoriteTeams } from "@/hooks/useFavoriteTeams";
+import { useLiveSports } from "@/hooks/useLiveSports";
 import { findLocalMarket, isLocalGame, isBlackedOut } from "@/lib/local-sports-data";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -172,6 +172,7 @@ const LiveSports = () => {
   const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
   const { sources: watchmodeSources, loading: watchmodeLoading } = useWatchmode("US");
   const { favorites, addFavorite, removeFavorite, isFavorite, favoriteAbbrs } = useFavoriteTeams();
+  const { games: liveGames, loading: sportsLoading, isLive, lastUpdated, refresh } = useLiveSports(60_000);
   const [scheduleTeam, setScheduleTeam] = useState<import("@/lib/all-sports-teams").TeamOption | null>(null);
 
   const handleViewSchedule = useCallback((team: import("@/lib/all-sports-teams").TeamOption) => {
@@ -198,8 +199,8 @@ const LiveSports = () => {
   const filteredGames = useMemo(() => {
     const games =
       activeLeague === "all"
-        ? MOCK_GAMES
-        : MOCK_GAMES.filter((g) => g.league === activeLeague);
+        ? liveGames
+        : liveGames.filter((g) => g.league === activeLeague);
 
     const statusOrder = { live: 0, scheduled: 1, final: 2 };
     const localTeams = localMarket?.teams || [];
@@ -215,14 +216,14 @@ const LiveSports = () => {
       if (aLocal !== bLocal) return aLocal - bLocal;
       return statusOrder[a.status] - statusOrder[b.status];
     });
-  }, [activeLeague, localMarket, favoriteAbbrs]);
+  }, [activeLeague, localMarket, favoriteAbbrs, liveGames]);
 
-  const liveCount = MOCK_GAMES.filter((g) => g.status === "live").length;
+  const liveCount = liveGames.filter((g) => g.status === "live").length;
 
   const followedByLeague = useMemo(() => {
     const counts: Record<string, number> = {};
     followedGames.forEach((gameId) => {
-      const game = MOCK_GAMES.find((g) => g.id === gameId);
+      const game = liveGames.find((g) => g.id === gameId);
       if (game) counts[game.league] = (counts[game.league] || 0) + 1;
     });
     return counts;
@@ -289,10 +290,26 @@ const LiveSports = () => {
                 </span>
               </motion.div>
             )}
+            {isLive && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                <Wifi className="h-3 w-3 text-emerald-500" />
+                <span className="text-[11px] font-medium text-emerald-500">Live Data</span>
+              </div>
+            )}
+            {!sportsLoading && (
+              <button
+                onClick={refresh}
+                className="flex items-center gap-1 px-2 py-1 rounded-full bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+                title={lastUpdated ? `Last updated: ${lastUpdated.toLocaleTimeString()}` : "Refresh"}
+              >
+                <RefreshCw className="h-3 w-3" />
+                <span className="text-[11px] font-medium">Refresh</span>
+              </button>
+            )}
             {!watchmodeLoading && watchmodeSources && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
                 <Wifi className="h-3 w-3 text-emerald-500" />
-                <span className="text-[11px] font-medium text-emerald-500">Watchmode Live</span>
+                <span className="text-[11px] font-medium text-emerald-500">Watchmode</span>
               </div>
             )}
           </div>
