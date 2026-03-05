@@ -1,11 +1,22 @@
 import { useState, useMemo } from "react";
-import { Star, X, ChevronDown, Search, Calendar } from "lucide-react";
+import { Star, X, ChevronDown, Search, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ALL_SPORTS_TEAMS, type TeamOption } from "@/lib/all-sports-teams";
 import type { FavoriteTeam } from "@/hooks/useFavoriteTeams";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   favorites: FavoriteTeam[];
@@ -56,20 +67,34 @@ const FavoriteTeamsPicker = ({ favorites, onAdd, onRemove, isFavorite, onViewSch
                 <Badge
                   variant="outline"
                   className="text-xs px-2 py-0.5 gap-1 bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20 rounded-r-none border-r-0"
-                  onClick={() => onRemove(f.team_abbr)}
+                  onClick={() => onViewSchedule && teamData ? onViewSchedule(teamData) : undefined}
                 >
                   ⭐ {f.team_abbr}
-                  <X className="h-3 w-3 ml-0.5" />
                 </Badge>
-                {onViewSchedule && teamData && (
-                  <button
-                    onClick={() => onViewSchedule(teamData)}
-                    className="h-[22px] px-1.5 rounded-r-md border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                    title={`View ${teamData.name} schedule`}
-                  >
-                    <Calendar className="h-3 w-3" />
-                  </button>
-                )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      className="h-[22px] px-1 rounded-r-md border border-primary/30 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                      title={`Remove ${f.team_abbr}`}
+                    >
+                      <Trash2 className="h-2.5 w-2.5" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove {teamData?.name || f.team_abbr}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will remove {teamData?.name || f.team_abbr} from your favorite teams. You can always add them back later.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onRemove(f.team_abbr)}>
+                        Remove
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </motion.div>
             );
           })}
