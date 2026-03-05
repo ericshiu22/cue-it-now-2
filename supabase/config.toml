@@ -1,1 +1,4 @@
 project_id = "kuhbkwmotrlqytxnlwbm"
+
+[functions.live-sports]
+verify_jwt = false
