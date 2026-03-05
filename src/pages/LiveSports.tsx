@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Trophy, MapPin, ChevronDown, Wifi, RefreshCw } from "lucide-react";
+import { Zap, Trophy, MapPin, ChevronDown, Wifi, RefreshCw, ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
+import { format, addDays, subDays, isToday, isSameDay } from "date-fns";
 import ScoreboardCard from "@/components/ScoreboardCard";
 import SeasonPassTracker from "@/components/SeasonPassTracker";
 import FavoriteTeamsPicker from "@/components/FavoriteTeamsPicker";
@@ -168,11 +169,12 @@ const LiveSports = () => {
   const { user } = useAuth();
   const [activeLeague, setActiveLeague] = useState("all");
   const [followedGames, setFollowedGames] = useState<Set<string>>(new Set());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const location = useUserLocation();
   const localMarket = useMemo(() => findLocalMarket(location.city), [location.city]);
   const { sources: watchmodeSources, loading: watchmodeLoading } = useWatchmode("US");
   const { favorites, addFavorite, removeFavorite, isFavorite, favoriteAbbrs } = useFavoriteTeams();
-  const { games: liveGames, loading: sportsLoading, isLive, lastUpdated, refresh } = useLiveSports(60_000);
+  const { games: liveGames, loading: sportsLoading, isLive, lastUpdated, refresh } = useLiveSports(selectedDate, 60_000);
   const [scheduleTeam, setScheduleTeam] = useState<import("@/lib/all-sports-teams").TeamOption | null>(null);
 
   const handleViewSchedule = useCallback((team: import("@/lib/all-sports-teams").TeamOption) => {
@@ -275,7 +277,7 @@ const LiveSports = () => {
 
           <div className="flex items-center gap-4">
             <p className="text-sm text-muted-foreground max-w-lg">
-              Today's games across NFL, NBA & more. Follow a game to get alerted 15 minutes before it starts.
+              Follow a game to get alerted 15 minutes before it starts.
             </p>
             {location.city && (
               <motion.div
@@ -306,11 +308,52 @@ const LiveSports = () => {
                 <span className="text-[11px] font-medium">Refresh</span>
               </button>
             )}
-            {!watchmodeLoading && watchmodeSources && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
-                <Wifi className="h-3 w-3 text-emerald-500" />
-                <span className="text-[11px] font-medium text-emerald-500">Watchmode</span>
-              </div>
+          </div>
+
+          {/* Date Navigator */}
+          <div className="flex items-center gap-1 mt-4">
+            <button
+              onClick={() => setSelectedDate((d) => subDays(d, 1))}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            {Array.from({ length: 5 }, (_, i) => {
+              const date = addDays(new Date(), i - 1);
+              const active = isSameDay(date, selectedDate);
+              const today = isToday(date);
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedDate(date)}
+                  className={`flex flex-col items-center px-3 py-1.5 rounded-lg text-xs font-medium transition-all min-w-[56px] ${
+                    active
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  }`}
+                >
+                  <span className="text-[10px] uppercase tracking-wide">
+                    {today ? "Today" : format(date, "EEE")}
+                  </span>
+                  <span className={`text-sm font-bold ${active ? "" : ""}`}>
+                    {format(date, "MMM d")}
+                  </span>
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setSelectedDate((d) => addDays(d, 1))}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            {!isToday(selectedDate) && (
+              <button
+                onClick={() => setSelectedDate(new Date())}
+                className="ml-2 px-2.5 py-1 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                Today
+              </button>
             )}
           </div>
         </div>
@@ -416,7 +459,9 @@ const LiveSports = () => {
         {filteredGames.length === 0 && (
           <div className="text-center py-16 text-muted-foreground">
             <Zap className="h-8 w-8 mx-auto mb-3 opacity-40" />
-            <p className="text-sm">No games scheduled for this league today.</p>
+            <p className="text-sm">
+              No games scheduled{activeLeague !== "all" ? " for this league" : ""} on {isToday(selectedDate) ? "today" : format(selectedDate, "EEEE, MMM d")}.
+            </p>
           </div>
         )}
       </div>

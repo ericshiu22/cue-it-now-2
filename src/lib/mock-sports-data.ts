@@ -203,42 +203,74 @@ function buildGame(raw: Omit<GameData, 'status' | 'period' | 'clock'> & { _durat
   return { ...rest, status, period, clock, homeScore, awayScore };
 }
 
-// ── Today's schedule with realistic game times (ET) ──
+// ── Multi-day schedule with realistic game times (ET) ──
 const allMockGames: GameData[] = [
-  // ── NBA ──  (games tonight)
+  // ═══════════════════ YESTERDAY ═══════════════════
+  buildGame({
+    id: "nba-y-1", league: "NBA",
+    homeTeam: "Miami Heat", homeAbbr: "MIA", homeLogo: "🏀", homeScore: null,
+    awayTeam: "New York Knicks", awayAbbr: "NYK", awayLogo: "🏀", awayScore: null,
+    startTime: yesterdayAt(19, 30),
+    broadcaster: "ESPN", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "nba-y-2", league: "NBA",
+    homeTeam: "Sacramento Kings", homeAbbr: "SAC", homeLogo: "🏀", homeScore: null,
+    awayTeam: "Houston Rockets", awayAbbr: "HOU", awayLogo: "🏀", awayScore: null,
+    startTime: yesterdayAt(22, 0),
+    broadcaster: "NBA TV", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "nhl-y-1", league: "NHL",
+    homeTeam: "Boston Bruins", homeAbbr: "BOS", homeLogo: "🏒", homeScore: null,
+    awayTeam: "Detroit Red Wings", awayAbbr: "DET", awayLogo: "🏒", awayScore: null,
+    startTime: yesterdayAt(19, 0),
+    broadcaster: "ESPN", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "epl-y-1", league: "EPL",
+    homeTeam: "Tottenham Hotspur", homeAbbr: "TOT", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Aston Villa", awayAbbr: "AVL", awayLogo: "⚽", awayScore: null,
+    startTime: yesterdayAt(15, 0),
+    broadcaster: "Peacock", streamingService: "peacock",
+    _duration: 2,
+  }),
+
+  // ═══════════════════ TODAY ═══════════════════
+  // ── NBA ──
   buildGame({
     id: "nba-today-1", league: "NBA",
     homeTeam: "Denver Nuggets", homeAbbr: "DEN", homeLogo: "🏀", homeScore: null,
     awayTeam: "Los Angeles Lakers", awayAbbr: "LAL", awayLogo: "🏀", awayScore: null,
-    startTime: todayAt(21, 0), // 9:00 PM ET
+    startTime: todayAt(21, 0),
     broadcaster: "ESPN", streamingService: "hulu",
   }),
   buildGame({
     id: "nba-today-2", league: "NBA",
     homeTeam: "Cleveland Cavaliers", homeAbbr: "CLE", homeLogo: "🏀", homeScore: null,
     awayTeam: "Boston Celtics", awayAbbr: "BOS", awayLogo: "🏀", awayScore: null,
-    startTime: todayAt(19, 0), // 7:00 PM ET
+    startTime: todayAt(19, 0),
     broadcaster: "TNT", streamingService: "hbomax",
   }),
   buildGame({
     id: "nba-today-3", league: "NBA",
     homeTeam: "Phoenix Suns", homeAbbr: "PHX", homeLogo: "🏀", homeScore: null,
     awayTeam: "Golden State Warriors", awayAbbr: "GSW", awayLogo: "🏀", awayScore: null,
-    startTime: todayAt(22, 0), // 10:00 PM ET
+    startTime: todayAt(22, 0),
     broadcaster: "NBA TV", streamingService: "hulu",
   }),
   buildGame({
     id: "nba-today-4", league: "NBA",
     homeTeam: "Milwaukee Bucks", homeAbbr: "MIL", homeLogo: "🏀", homeScore: null,
     awayTeam: "Philadelphia 76ers", awayAbbr: "PHI", awayLogo: "🏀", awayScore: null,
-    startTime: todayAt(19, 30), // 7:30 PM ET
+    startTime: todayAt(19, 30),
     broadcaster: "ESPN", streamingService: "hulu",
   }),
   buildGame({
     id: "nba-today-5", league: "NBA",
     homeTeam: "Dallas Mavericks", homeAbbr: "DAL", homeLogo: "🏀", homeScore: null,
     awayTeam: "Minnesota Timberwolves", awayAbbr: "MIN", awayLogo: "🏀", awayScore: null,
-    startTime: todayAt(20, 30), // 8:30 PM ET
+    startTime: todayAt(20, 30),
     broadcaster: "TNT", streamingService: "hbomax",
   }),
 
@@ -265,7 +297,7 @@ const allMockGames: GameData[] = [
     broadcaster: "ESPN", streamingService: "hulu",
   }),
 
-  // ── NCAAM ── (March Madness time)
+  // ── NCAAM ──
   buildGame({
     id: "ncaam-today-1", league: "NCAAM",
     homeTeam: "Duke Blue Devils", homeAbbr: "DUKE", homeLogo: "🏀", homeScore: null,
@@ -318,7 +350,7 @@ const allMockGames: GameData[] = [
     _duration: 2,
   }),
 
-  // ── EPL ── (morning games for US viewers)
+  // ── EPL ──
   buildGame({
     id: "epl-today-1", league: "EPL",
     homeTeam: "Arsenal", homeAbbr: "ARS", homeLogo: "⚽", homeScore: null,
@@ -355,25 +387,6 @@ const allMockGames: GameData[] = [
     broadcaster: "CBS", streamingService: "paramount",
     _duration: 2,
   }),
-  buildGame({
-    id: "ucl-today-2", league: "UCL",
-    homeTeam: "Manchester City", homeAbbr: "MCI", homeLogo: "⚽", homeScore: null,
-    awayTeam: "Inter Milan", awayAbbr: "INT", awayLogo: "⚽", awayScore: null,
-    startTime: tomorrowAt(15, 0),
-    broadcaster: "CBS", streamingService: "paramount",
-    _duration: 2,
-  }),
-
-  // ── NASCAR ──
-  buildGame({
-    id: "nascar-today-1", league: "NASCAR",
-    homeTeam: "Kyle Larson", homeAbbr: "LAR", homeLogo: "🏁", homeScore: null,
-    awayTeam: "Denny Hamlin", awayAbbr: "HAM", awayLogo: "🏁", awayScore: null,
-    startTime: tomorrowAt(14, 0),
-    broadcaster: "FOX", streamingService: "hulu",
-    isEvent: true, eventName: "Atlanta Motor Speedway", eventRound: "Race",
-    _duration: 3,
-  }),
 
   // ── Golf ──
   buildGame({
@@ -385,7 +398,119 @@ const allMockGames: GameData[] = [
     isEvent: true, eventName: "Arnold Palmer Invitational", eventRound: "Round 3", position: "Leader: SCH (-12)",
     _duration: 5,
   }),
+
+  // ═══════════════════ TOMORROW ═══════════════════
+  buildGame({
+    id: "nba-t-1", league: "NBA",
+    homeTeam: "Los Angeles Lakers", homeAbbr: "LAL", homeLogo: "🏀", homeScore: null,
+    awayTeam: "Portland Trail Blazers", awayAbbr: "POR", awayLogo: "🏀", awayScore: null,
+    startTime: tomorrowAt(22, 0),
+    broadcaster: "ESPN", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "nba-t-2", league: "NBA",
+    homeTeam: "Chicago Bulls", homeAbbr: "CHI", homeLogo: "🏀", homeScore: null,
+    awayTeam: "Atlanta Hawks", awayAbbr: "ATL", awayLogo: "🏀", awayScore: null,
+    startTime: tomorrowAt(20, 0),
+    broadcaster: "TNT", streamingService: "hbomax",
+  }),
+  buildGame({
+    id: "nba-t-3", league: "NBA",
+    homeTeam: "Indiana Pacers", homeAbbr: "IND", homeLogo: "🏀", homeScore: null,
+    awayTeam: "Toronto Raptors", awayAbbr: "TOR", awayLogo: "🏀", awayScore: null,
+    startTime: tomorrowAt(19, 0),
+    broadcaster: "NBA TV", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "nhl-t-1", league: "NHL",
+    homeTeam: "Pittsburgh Penguins", homeAbbr: "PIT", homeLogo: "🏒", homeScore: null,
+    awayTeam: "Washington Capitals", awayAbbr: "WSH", awayLogo: "🏒", awayScore: null,
+    startTime: tomorrowAt(19, 0),
+    broadcaster: "TNT", streamingService: "hbomax",
+  }),
+  buildGame({
+    id: "nhl-t-2", league: "NHL",
+    homeTeam: "Vegas Golden Knights", homeAbbr: "VGK", homeLogo: "🏒", homeScore: null,
+    awayTeam: "Dallas Stars", awayAbbr: "DAL", awayLogo: "🏒", awayScore: null,
+    startTime: tomorrowAt(22, 0),
+    broadcaster: "ESPN", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "ucl-t-1", league: "UCL",
+    homeTeam: "Manchester City", homeAbbr: "MCI", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Inter Milan", awayAbbr: "INT", awayLogo: "⚽", awayScore: null,
+    startTime: tomorrowAt(15, 0),
+    broadcaster: "CBS", streamingService: "paramount",
+    _duration: 2,
+  }),
+  buildGame({
+    id: "mls-t-1", league: "MLS",
+    homeTeam: "Atlanta United", homeAbbr: "ATL", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Nashville SC", awayAbbr: "NSH", awayLogo: "⚽", awayScore: null,
+    startTime: tomorrowAt(19, 30),
+    broadcaster: "Apple TV+", streamingService: "appletv",
+    _duration: 2,
+  }),
+  buildGame({
+    id: "nascar-t-1", league: "NASCAR",
+    homeTeam: "Kyle Larson", homeAbbr: "LAR", homeLogo: "🏁", homeScore: null,
+    awayTeam: "Denny Hamlin", awayAbbr: "HAM", awayLogo: "🏁", awayScore: null,
+    startTime: tomorrowAt(14, 0),
+    broadcaster: "FOX", streamingService: "hulu",
+    isEvent: true, eventName: "Atlanta Motor Speedway", eventRound: "Race",
+    _duration: 3,
+  }),
+
+  // ═══════════════════ DAY AFTER TOMORROW ═══════════════════
+  buildGame({
+    id: "nba-d2-1", league: "NBA",
+    homeTeam: "Boston Celtics", homeAbbr: "BOS", homeLogo: "🏀", homeScore: null,
+    awayTeam: "Milwaukee Bucks", awayAbbr: "MIL", awayLogo: "🏀", awayScore: null,
+    startTime: etToUtc(2, 19, 30),
+    broadcaster: "ESPN", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "nba-d2-2", league: "NBA",
+    homeTeam: "Golden State Warriors", homeAbbr: "GSW", homeLogo: "🏀", homeScore: null,
+    awayTeam: "Denver Nuggets", awayAbbr: "DEN", awayLogo: "🏀", awayScore: null,
+    startTime: etToUtc(2, 22, 0),
+    broadcaster: "TNT", streamingService: "hbomax",
+  }),
+  buildGame({
+    id: "nhl-d2-1", league: "NHL",
+    homeTeam: "Carolina Hurricanes", homeAbbr: "CAR", homeLogo: "🏒", homeScore: null,
+    awayTeam: "New York Rangers", awayAbbr: "NYR", awayLogo: "🏒", awayScore: null,
+    startTime: etToUtc(2, 19, 0),
+    broadcaster: "ESPN", streamingService: "hulu",
+  }),
+  buildGame({
+    id: "epl-d2-1", league: "EPL",
+    homeTeam: "Manchester City", homeAbbr: "MCI", homeLogo: "⚽", homeScore: null,
+    awayTeam: "Newcastle United", awayAbbr: "NEW", awayLogo: "⚽", awayScore: null,
+    startTime: etToUtc(2, 12, 30),
+    broadcaster: "NBC", streamingService: "peacock",
+    _duration: 2,
+  }),
+  buildGame({
+    id: "golf-d2-1", league: "Golf",
+    homeTeam: "Scottie Scheffler", homeAbbr: "SCH", homeLogo: "⛳", homeScore: null,
+    awayTeam: "Rory McIlroy", awayAbbr: "McI", awayLogo: "⛳", awayScore: null,
+    startTime: etToUtc(2, 10, 0),
+    broadcaster: "CBS", streamingService: "paramount",
+    isEvent: true, eventName: "Arnold Palmer Invitational", eventRound: "Final Round", position: "Leader: SCH (-15)",
+    _duration: 5,
+  }),
 ];
 
 /** Only include games from leagues currently in-season */
 export const MOCK_GAMES: GameData[] = allMockGames.filter((g) => isLeagueInSeason(g.league));
+
+/** Get games for a specific date (compares in user's local timezone) */
+export function getGamesForDate(date: Date): GameData[] {
+  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+  return MOCK_GAMES.filter((g) => {
+    const t = new Date(g.startTime).getTime();
+    return t >= dayStart && t < dayEnd;
+  });
+}
