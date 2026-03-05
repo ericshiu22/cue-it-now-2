@@ -4,30 +4,30 @@ const corsHeaders = {
 };
 
 // API-Sports league ID mappings
-const SOCCER_LEAGUES: Record<string, number> = {
-  EPL: 39,
-  "La Liga": 140,
-  UCL: 2,
-  MLS: 253,
-  "Liga MX": 262,
+const SOCCER_LEAGUES: Record<string, { id: number; season: number }> = {
+  EPL: { id: 39, season: 2025 },       // 2025-26 season
+  "La Liga": { id: 140, season: 2025 },
+  UCL: { id: 2, season: 2025 },
+  MLS: { id: 253, season: 2026 },      // Calendar-year season
+  "Liga MX": { id: 262, season: 2026 },
 };
 
-const BASKETBALL_LEAGUES: Record<string, number> = {
-  NBA: 12,
-  NCAAM: 116,
+const BASKETBALL_LEAGUES: Record<string, { id: number; season: string }> = {
+  NBA: { id: 12, season: "2025-2026" },
+  NCAAM: { id: 116, season: "2025-2026" },
 };
 
-const HOCKEY_LEAGUES: Record<string, number> = {
-  NHL: 57,
+const HOCKEY_LEAGUES: Record<string, { id: number; season: number }> = {
+  NHL: { id: 57, season: 2025 },
 };
 
-const BASEBALL_LEAGUES: Record<string, number> = {
-  MLB: 1,
+const BASEBALL_LEAGUES: Record<string, { id: number; season: number }> = {
+  MLB: { id: 1, season: 2026 },
 };
 
-const AMERICAN_FOOTBALL_LEAGUES: Record<string, number> = {
-  NFL: 1,
-  NCAAF: 8,
+const AMERICAN_FOOTBALL_LEAGUES: Record<string, { id: number; season: number }> = {
+  NFL: { id: 1, season: 2025 },
+  NCAAF: { id: 8, season: 2025 },
 };
 
 // Broadcaster/streaming mappings per league
@@ -67,7 +67,6 @@ interface NormalizedGame {
 }
 
 function abbreviate(name: string): string {
-  // Common abbreviations
   const abbrs: Record<string, string> = {
     "Los Angeles Lakers": "LAL", "Boston Celtics": "BOS", "Golden State Warriors": "GSW",
     "Milwaukee Bucks": "MIL", "Phoenix Suns": "PHX", "Denver Nuggets": "DEN",
@@ -80,6 +79,8 @@ function abbreviate(name: string): string {
     "Oklahoma City Thunder": "OKC", "New Orleans Pelicans": "NOP",
     "San Antonio Spurs": "SAS", "Houston Rockets": "HOU", "Utah Jazz": "UTA",
     "Memphis Grizzlies": "MEM", "LA Clippers": "LAC",
+    "Edmonton Oilers": "EDM", "Florida Panthers": "FLA", "New York Rangers": "NYR",
+    "Toronto Maple Leafs": "TOR", "Colorado Avalanche": "COL",
   };
   return abbrs[name] || name.substring(0, 3).toUpperCase();
 }
@@ -92,26 +93,40 @@ function mapSoccerStatus(shortStatus: string): "scheduled" | "live" | "final" {
   return "scheduled";
 }
 
-function mapBasketballStatus(shortStatus: number | string): "scheduled" | "live" | "final" {
-  // API-Basketball uses numeric status or string
-  const s = String(shortStatus);
-  if (["1", "2", "3", "4", "5"].includes(s)) return "live"; // quarters/OT
-  if (["6", "7"].includes(s)) return "live"; // break
-  if (["3"].includes(s) || s === "FT" || s === "AOT") return "final";
-  return "scheduled";
+async function fetchWithLogging(url: string, label: string): Promise<any> {
+  console.log(`[${label}] Fetching: ${url}`);
+  const res = await fetch(url, { headers: { "x-apisports-key": API_KEY } });
+  const text = await res.text();
+  
+  if (!res.ok) {
+    console.error(`[${label}] HTTP ${res.status}: ${text.substring(0, 500)}`);
+    return null;
+  }
+  
+  try {
+    const data = JSON.parse(text);
+    const count = data.response?.length || 0;
+    console.log(`[${label}] Got ${count} results. Remaining: ${data.paging?.total || 'N/A'}`);
+    if (count === 0 && data.errors && Object.keys(data.errors).length > 0) {
+      console.error(`[${label}] API errors:`, JSON.stringify(data.errors));
+    }
+    return data;
+  } catch {
+    console.error(`[${label}] Failed to parse JSON: ${text.substring(0, 200)}`);
+    return null;
+  }
 }
 
 async function fetchSoccerGames(date: string): Promise<NormalizedGame[]> {
   const games: NormalizedGame[] = [];
 
-  for (const [league, leagueId] of Object.entries(SOCCER_LEAGUES)) {
+  for (const [league, config] of Object.entries(SOCCER_LEAGUES)) {
     try {
-      const res = await fetch(
-        `https://v3.football.api-sports.io/fixtures?date=${date}&league=${leagueId}&season=${new Date().getFullYear() > 6 ? new Date().getFullYear() - 1 : new Date().getFullYear()}`,
-        { headers: { "x-apisports-key": API_KEY } }
+      const data = await fetchWithLogging(
+        `https://v3.football.api-sports.io/fixtures?date=${date}&league=${config.id}&season=${config.season}`,
+        `Soccer/${league}`
       );
-      const data = await res.json();
-      if (!data.response) continue;
+      if (!data?.response) continue;
 
       for (const fixture of data.response) {
         const status = mapSoccerStatus(fixture.fixture.status.short);
@@ -154,14 +169,13 @@ async function fetchSoccerGames(date: string): Promise<NormalizedGame[]> {
 async function fetchBasketballGames(date: string): Promise<NormalizedGame[]> {
   const games: NormalizedGame[] = [];
 
-  for (const [league, leagueId] of Object.entries(BASKETBALL_LEAGUES)) {
+  for (const [league, config] of Object.entries(BASKETBALL_LEAGUES)) {
     try {
-      const res = await fetch(
-        `https://v1.basketball.api-sports.io/games?date=${date}&league=${leagueId}&season=${league === "NBA" ? "2025-2026" : "2025-2026"}`,
-        { headers: { "x-apisports-key": API_KEY } }
+      const data = await fetchWithLogging(
+        `https://v1.basketball.api-sports.io/games?date=${date}&league=${config.id}&season=${config.season}`,
+        `Basketball/${league}`
       );
-      const data = await res.json();
-      if (!data.response) continue;
+      if (!data?.response) continue;
 
       for (const game of data.response) {
         const shortStatus = game.status?.short || "NS";
@@ -208,14 +222,13 @@ async function fetchBasketballGames(date: string): Promise<NormalizedGame[]> {
 async function fetchHockeyGames(date: string): Promise<NormalizedGame[]> {
   const games: NormalizedGame[] = [];
 
-  for (const [league, leagueId] of Object.entries(HOCKEY_LEAGUES)) {
+  for (const [league, config] of Object.entries(HOCKEY_LEAGUES)) {
     try {
-      const res = await fetch(
-        `https://v1.hockey.api-sports.io/games?date=${date}&league=${leagueId}&season=2025`,
-        { headers: { "x-apisports-key": API_KEY } }
+      const data = await fetchWithLogging(
+        `https://v1.hockey.api-sports.io/games?date=${date}&league=${config.id}&season=${config.season}`,
+        `Hockey/${league}`
       );
-      const data = await res.json();
-      if (!data.response) continue;
+      if (!data?.response) continue;
 
       for (const game of data.response) {
         const shortStatus = game.status?.short || "NS";
@@ -230,11 +243,11 @@ async function fetchHockeyGames(date: string): Promise<NormalizedGame[]> {
           id: `hockey-${league}-${game.id}`,
           league,
           homeTeam: game.teams.home.name,
-          homeAbbr: (game.teams.home.name as string).substring(0, 3).toUpperCase(),
+          homeAbbr: abbreviate(game.teams.home.name),
           homeLogo: game.teams.home.logo || "🏒",
           homeScore: game.scores?.home ?? null,
           awayTeam: game.teams.away.name,
-          awayAbbr: (game.teams.away.name as string).substring(0, 3).toUpperCase(),
+          awayAbbr: abbreviate(game.teams.away.name),
           awayLogo: game.teams.away.logo || "🏒",
           awayScore: game.scores?.away ?? null,
           status,
@@ -254,14 +267,13 @@ async function fetchHockeyGames(date: string): Promise<NormalizedGame[]> {
 async function fetchBaseballGames(date: string): Promise<NormalizedGame[]> {
   const games: NormalizedGame[] = [];
 
-  for (const [league, leagueId] of Object.entries(BASEBALL_LEAGUES)) {
+  for (const [league, config] of Object.entries(BASEBALL_LEAGUES)) {
     try {
-      const res = await fetch(
-        `https://v1.baseball.api-sports.io/games?date=${date}&league=${leagueId}&season=2026`,
-        { headers: { "x-apisports-key": API_KEY } }
+      const data = await fetchWithLogging(
+        `https://v1.baseball.api-sports.io/games?date=${date}&league=${config.id}&season=${config.season}`,
+        `Baseball/${league}`
       );
-      const data = await res.json();
-      if (!data.response) continue;
+      if (!data?.response) continue;
 
       for (const game of data.response) {
         const shortStatus = game.status?.short || "NS";
@@ -300,14 +312,13 @@ async function fetchBaseballGames(date: string): Promise<NormalizedGame[]> {
 async function fetchAmericanFootballGames(date: string): Promise<NormalizedGame[]> {
   const games: NormalizedGame[] = [];
 
-  for (const [league, leagueId] of Object.entries(AMERICAN_FOOTBALL_LEAGUES)) {
+  for (const [league, config] of Object.entries(AMERICAN_FOOTBALL_LEAGUES)) {
     try {
-      const res = await fetch(
-        `https://v1.american-football.api-sports.io/games?date=${date}&league=${leagueId}&season=2025`,
-        { headers: { "x-apisports-key": API_KEY } }
+      const data = await fetchWithLogging(
+        `https://v1.american-football.api-sports.io/games?date=${date}&league=${config.id}&season=${config.season}`,
+        `AmFootball/${league}`
       );
-      const data = await res.json();
-      if (!data.response) continue;
+      if (!data?.response) continue;
 
       for (const game of data.response) {
         const shortStatus = game.game?.status?.short || "NS";
@@ -353,34 +364,29 @@ Deno.serve(async (req) => {
     const { date, leagues } = await req.json().catch(() => ({}));
     const targetDate = date || new Date().toISOString().split("T")[0];
     
-    // Optionally filter which sport groups to fetch
-    const requestedLeagues: string[] = leagues || [];
+    console.log(`[live-sports] Request for date=${targetDate}, leagues=${JSON.stringify(leagues)}, API_KEY present=${!!API_KEY}`);
     
+    const requestedLeagues: string[] = leagues || [];
     const fetchAll = requestedLeagues.length === 0;
     
     const promises: Promise<NormalizedGame[]>[] = [];
     
-    // Soccer leagues
     const hasSoccer = fetchAll || requestedLeagues.some(l => 
       ["EPL", "La Liga", "UCL", "MLS", "Liga MX"].includes(l)
     );
     if (hasSoccer) promises.push(fetchSoccerGames(targetDate));
     
-    // Basketball
     const hasBasketball = fetchAll || requestedLeagues.some(l => 
       ["NBA", "NCAAM"].includes(l)
     );
     if (hasBasketball) promises.push(fetchBasketballGames(targetDate));
     
-    // Hockey
     const hasHockey = fetchAll || requestedLeagues.some(l => ["NHL"].includes(l));
     if (hasHockey) promises.push(fetchHockeyGames(targetDate));
     
-    // Baseball
     const hasBaseball = fetchAll || requestedLeagues.some(l => ["MLB"].includes(l));
     if (hasBaseball) promises.push(fetchBaseballGames(targetDate));
     
-    // American Football
     const hasAmFootball = fetchAll || requestedLeagues.some(l => 
       ["NFL", "NCAAF"].includes(l)
     );
@@ -392,13 +398,16 @@ Deno.serve(async (req) => {
     for (const result of results) {
       if (result.status === "fulfilled") {
         allGames.push(...result.value);
+      } else {
+        console.error("[live-sports] Promise rejected:", result.reason);
       }
     }
 
-    // Filter to only requested leagues if specified
     const filtered = requestedLeagues.length > 0
       ? allGames.filter(g => requestedLeagues.includes(g.league))
       : allGames;
+
+    console.log(`[live-sports] Returning ${filtered.length} games total`);
 
     return new Response(
       JSON.stringify({ games: filtered, date: targetDate, count: filtered.length }),
