@@ -65,10 +65,10 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
   const broadcasters = BROADCASTERS[league] || ["ESPN"];
   const streamingOptions = STREAMING[league] || ["hulu"];
 
-  // Spread games across 14 days
-  const slots: number[] = [];
-  for (let i = 0; i < gameCount; i++) {
-    slots.push(Math.floor(rand() * 14));
+  // Always include today (day 0), then spread remaining games across days 1-13
+  const slots: number[] = [0];
+  for (let i = 1; i < gameCount; i++) {
+    slots.push(Math.floor(rand() * 13) + 1);
   }
   slots.sort((a, b) => a - b);
 
