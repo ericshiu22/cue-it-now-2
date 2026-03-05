@@ -56,7 +56,15 @@ export const SEASON_DATA: Record<string, SeasonInfo> = {
   UCL: { name: "2025–26 Champions League", league: "UCL", primaryService: "paramount", startDate: "2025-09-17", endDate: "2026-05-30" },
 };
 
-export const MOCK_GAMES: GameData[] = [
+/** Check if a league is currently in-season */
+export function isLeagueInSeason(league: string): boolean {
+  const season = SEASON_DATA[league];
+  if (!season) return true; // Unknown leagues are shown by default
+  const now = new Date();
+  return now >= new Date(season.startDate) && now <= new Date(season.endDate);
+}
+
+const allMockGames: GameData[] = [
   // ── NBA ──
   {
     id: "nba-1", league: "NBA",
@@ -304,3 +312,6 @@ export const MOCK_GAMES: GameData[] = [
     broadcaster: "CBS", streamingService: "paramount",
   },
 ];
+
+/** Only include games from leagues currently in-season */
+export const MOCK_GAMES: GameData[] = allMockGames.filter((g) => isLeagueInSeason(g.league));

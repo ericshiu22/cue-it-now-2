@@ -48,9 +48,21 @@ function seededRandom(seed: string) {
   };
 }
 
-/** Generate a 2-week mock schedule for a given team */
+/** Generate a 2-week mock schedule for a given team (only if season is active) */
 export function generateTeamSchedule(team: TeamOption): GameData[] {
   const league = team.league as League;
+
+  // Check if the league's season is currently active
+  const season = SEASON_DATA[league];
+  if (season) {
+    const now = new Date();
+    const seasonStart = new Date(season.startDate);
+    const seasonEnd = new Date(season.endDate);
+    if (now < seasonStart || now > seasonEnd) {
+      return []; // Season not active
+    }
+  }
+
   const leagueTeams = ALL_SPORTS_TEAMS.filter(
     (t) => t.league === league && t.abbr !== team.abbr
   );
