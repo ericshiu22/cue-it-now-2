@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, ArrowLeft, MapPin, Tv, BellOff, Play, Star } from "lucide-react";
+import { Calendar, ArrowLeft, MapPin, Tv, BellOff, Play, Star, CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { ALL_SPORTS_TEAMS, type TeamOption } from "@/lib/all-sports-teams";
 import { generateTeamSchedule } from "@/lib/generate-team-schedule";
+import { SEASON_DATA } from "@/lib/mock-sports-data";
 import { getService } from "@/lib/streaming-services";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -270,6 +271,33 @@ const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceId
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Off-season message */}
+      {selectedTeam && schedule.length === 0 && (() => {
+        const season = SEASON_DATA[selectedTeam.league];
+        const nextStart = season ? new Date(season.startDate) : null;
+        const seasonName = season?.name || `${selectedTeam.league} season`;
+        const isBeforeSeason = nextStart && new Date() < nextStart;
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-2 py-8 text-center"
+          >
+            <CalendarOff className="h-8 w-8 text-muted-foreground/50" />
+            <p className="text-sm font-medium text-foreground">
+              {selectedTeam.name} is currently off-season
+            </p>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              {isBeforeSeason
+                ? `The ${seasonName} begins ${nextStart!.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" })}.`
+                : season
+                  ? `The ${seasonName} has ended. Check back when the next season begins.`
+                  : "No upcoming games scheduled at this time."}
+            </p>
+          </motion.div>
+        );
+      })()}
     </div>
   );
 };
