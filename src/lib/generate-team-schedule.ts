@@ -2,6 +2,29 @@ import type { GameData, League } from "./mock-sports-data";
 import { ALL_SPORTS_TEAMS, type TeamOption } from "./all-sports-teams";
 import { SEASON_DATA } from "./mock-sports-data";
 
+/**
+ * Convert an Eastern Time hour on a given date to a proper UTC ISO string.
+ * Handles EST/EDT automatically via Intl.
+ */
+function etToUtc(date: Date, hour: number, minute = 0): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const h = String(hour).padStart(2, '0');
+  const m = String(minute).padStart(2, '0');
+  const etString = `${date.getFullYear()}-${month}-${day}T${h}:${m}:00`;
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    timeZoneName: 'shortOffset',
+  });
+  const parts = formatter.formatToParts(date);
+  const tzPart = parts.find(p => p.type === 'timeZoneName');
+  const offsetMatch = tzPart?.value?.match(/GMT([+-]\d+)/);
+  const offsetHours = offsetMatch ? parseInt(offsetMatch[1]) : -5;
+  const utcDate = new Date(etString + "Z");
+  utcDate.setHours(utcDate.getHours() - offsetHours);
+  return utcDate.toISOString();
+}
+
 const BROADCASTERS: Record<string, string[]> = {
   NFL: ["ESPN", "FOX", "CBS", "NBC", "Amazon Prime"],
   NBA: ["ESPN", "TNT", "NBA TV", "ABC"],
@@ -92,13 +115,12 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
     const opponent = leagueTeams[Math.floor(rand() * leagueTeams.length)];
     const isHome = rand() > 0.5;
 
-    // Random time between 12pm and 10pm
+    // Random time between 12pm and 10pm ET
     const hour = Math.floor(rand() * 10) + 12;
     const minute = rand() > 0.5 ? 30 : 0;
 
     const gameDate = new Date(now);
     gameDate.setDate(gameDate.getDate() + dayOffset);
-    gameDate.setHours(hour, minute, 0, 0);
 
     const broadcaster = broadcasters[Math.floor(rand() * broadcasters.length)];
     const streaming = streamingOptions[Math.floor(rand() * streamingOptions.length)];
@@ -115,7 +137,7 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
       awayLogo: opponent.emoji,
       awayScore: null,
       status: "scheduled",
-      startTime: gameDate.toISOString(),
+      startTime: etToUtc(gameDate, hour, minute),
       broadcaster,
       streamingService: streaming,
     });
