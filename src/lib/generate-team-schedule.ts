@@ -1,6 +1,6 @@
 import type { GameData, League } from "./mock-sports-data";
 import { ALL_SPORTS_TEAMS, type TeamOption } from "./all-sports-teams";
-import { SEASON_DATA } from "./mock-sports-data";
+import { SEASON_DATA, MOCK_GAMES } from "./mock-sports-data";
 
 /**
  * Convert an Eastern Time hour on a given date to a proper UTC ISO string.
@@ -86,36 +86,55 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
     }
   }
 
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const twoWeeksEnd = todayStart + 14 * 24 * 60 * 60 * 1000;
+
+  // 1) Pull real games from MOCK_GAMES that involve this team
+  const realGames = MOCK_GAMES.filter((g) => {
+    if (g.league !== league) return false;
+    if (g.homeAbbr !== team.abbr && g.awayAbbr !== team.abbr) return false;
+    const gameTime = new Date(g.startTime).getTime();
+    return gameTime >= todayStart - 24 * 60 * 60 * 1000 && gameTime < twoWeeksEnd;
+  });
+
+  // Track which day offsets are already covered by real games
+  const coveredDays = new Set<number>();
+  for (const g of realGames) {
+    const gameDate = new Date(g.startTime);
+    const dayOffset = Math.floor((gameDate.getTime() - todayStart) / (24 * 60 * 60 * 1000));
+    coveredDays.add(dayOffset);
+  }
+
+  // 2) Fill remaining days with generated games
   const leagueTeams = ALL_SPORTS_TEAMS.filter(
     (t) => t.league === league && t.abbr !== team.abbr
   );
-  if (leagueTeams.length === 0) return [];
+  if (leagueTeams.length === 0) return realGames;
 
   const rand = seededRandom(team.abbr + team.league);
-  const now = new Date();
-  const games: GameData[] = [];
-
-  // Generate 5-8 games over the next 14 days
-  const gameCount = Math.floor(rand() * 4) + 5;
   const broadcasters = BROADCASTERS[league] || ["ESPN"];
   const streamingOptions = STREAMING[league] || ["hulu"];
 
-  // Always include today (day 0), then spread remaining games across days 1-13
-  const slots: number[] = [0];
-  for (let i = 1; i < gameCount; i++) {
-    slots.push(Math.floor(rand() * 13) + 1);
-  }
-  slots.sort((a, b) => a - b);
+  const gameCount = Math.floor(rand() * 4) + 5;
+  const generatedGames: GameData[] = [];
 
-  // Deduplicate days (max 1 game per day)
-  const uniqueDays = [...new Set(slots)];
+  // Generate day slots, skipping days that have real games
+  const slots: number[] = [];
+  for (let i = 0; i < gameCount + 5; i++) {
+    const day = i === 0 ? 1 : Math.floor(rand() * 13) + 1; // start from day 1+
+    if (!coveredDays.has(day)) {
+      slots.push(day);
+    }
+    // consume the random values regardless to keep determinism
+    rand(); rand(); rand(); rand();
+  }
+  const uniqueDays = [...new Set(slots)].sort((a, b) => a - b).slice(0, Math.max(0, gameCount - realGames.length));
 
   for (let i = 0; i < uniqueDays.length; i++) {
     const dayOffset = uniqueDays[i];
     const opponent = leagueTeams[Math.floor(rand() * leagueTeams.length)];
     const isHome = rand() > 0.5;
-
-    // Random time between 12pm and 10pm ET
     const hour = Math.floor(rand() * 10) + 12;
     const minute = rand() > 0.5 ? 30 : 0;
 
@@ -125,7 +144,7 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
     const broadcaster = broadcasters[Math.floor(rand() * broadcasters.length)];
     const streaming = streamingOptions[Math.floor(rand() * streamingOptions.length)];
 
-    games.push({
+    generatedGames.push({
       id: `sched-${team.abbr}-${i}`,
       league,
       homeTeam: isHome ? team.name : opponent.name,
@@ -143,5 +162,8 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
     });
   }
 
-  return games;
+  // Combine and sort by start time
+  return [...realGames, ...generatedGames].sort(
+    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+  );
 }
