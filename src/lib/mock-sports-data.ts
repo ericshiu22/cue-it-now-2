@@ -61,26 +61,46 @@ export function isLeagueInSeason(league: string): boolean {
 }
 
 /**
- * Helper to create a date for today at a specific hour (ET).
- * Offset converts ET to UTC: ET = UTC-5 (EST) or UTC-4 (EDT).
- * In March, EDT kicks in on 2nd Sunday, so use UTC-4 for safety.
+ * Create a UTC Date for a given Eastern Time hour on a specific day offset.
+ * Uses America/New_York to handle EST/EDT automatically.
  */
-function todayAt(hour: number, minute = 0): string {
+function etToUtc(dayOffset: number, hour: number, minute = 0): string {
   const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour + 4, minute, 0, 0);
-  return d.toISOString();
+  // Build a date string in ET
+  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset);
+  const month = String(base.getMonth() + 1).padStart(2, '0');
+  const day = String(base.getDate()).padStart(2, '0');
+  const h = String(hour).padStart(2, '0');
+  const m = String(minute).padStart(2, '0');
+  // Use Intl to figure out the ET offset, then compute UTC
+  // Simpler approach: construct an ET-labeled string and parse it
+  const etString = `${base.getFullYear()}-${month}-${day}T${h}:${m}:00`;
+  // Get the offset for this date in ET
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    timeZoneName: 'shortOffset',
+  });
+  const parts = formatter.formatToParts(base);
+  const tzPart = parts.find(p => p.type === 'timeZoneName');
+  // Parse offset like "GMT-5" or "GMT-4"
+  const offsetMatch = tzPart?.value?.match(/GMT([+-]\d+)/);
+  const offsetHours = offsetMatch ? parseInt(offsetMatch[1]) : -5;
+  // Convert ET to UTC by subtracting the offset
+  const utcDate = new Date(etString + "Z");
+  utcDate.setHours(utcDate.getHours() - offsetHours);
+  return utcDate.toISOString();
+}
+
+function todayAt(hour: number, minute = 0): string {
+  return etToUtc(0, hour, minute);
 }
 
 function yesterdayAt(hour: number, minute = 0): string {
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, hour + 4, minute, 0, 0);
-  return d.toISOString();
+  return etToUtc(-1, hour, minute);
 }
 
 function tomorrowAt(hour: number, minute = 0): string {
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, hour + 4, minute, 0, 0);
-  return d.toISOString();
+  return etToUtc(1, hour, minute);
 }
 
 /**
