@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getRecommendations, getWatchProviders, getImageUrl, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
+import { getRecommendations, getWatchProviders, getImageUrl, discoverByGenre, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
 import MovieCard from "./MovieCard";
 import SectionHeader from "./SectionHeader";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
