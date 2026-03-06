@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import NoticeAtCollection from "@/components/NoticeAtCollection";
 
 const Auth = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +42,12 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else if (!isLogin) {
-      toast.success("Account created! You're signed in.");
+      toast.success("Account created! Let's set up your subscriptions.");
+      const needsSubOnboarding = !localStorage.getItem("cue-subs-onboarded");
+      if (needsSubOnboarding) {
+        navigate("/onboarding-subs", { replace: true });
+        return;
+      }
     }
   };
 
