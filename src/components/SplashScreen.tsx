@@ -23,7 +23,7 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
       });
     }, 1200);
 
-    const dismiss = setTimeout(onComplete, 1200 * headlines.length + 2200);
+    const dismiss = setTimeout(onComplete, 1200 * headlines.length + 4200);
     return () => {
       clearInterval(interval);
       clearTimeout(dismiss);
