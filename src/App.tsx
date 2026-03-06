@@ -8,7 +8,6 @@ import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import SplashScreen from "@/components/SplashScreen";
-import OnboardingFlow from "@/components/OnboardingFlow";
 import Index from "./pages/Index";
 import MyQueue from "./pages/MyQueue";
 import Friends from "./pages/Friends";
@@ -26,9 +25,6 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(
-    () => !localStorage.getItem("cue-onboarding-done")
-  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -41,12 +37,7 @@ const App = () => {
               <SplashScreen onComplete={() => setShowSplash(false)} />
             )}
           </AnimatePresence>
-          <AnimatePresence>
-            {!showSplash && showOnboarding && (
-              <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
-            )}
-          </AnimatePresence>
-          {!showSplash && !showOnboarding && (
+          {!showSplash && (
             <BrowserRouter>
               <Navbar />
               <Routes>
