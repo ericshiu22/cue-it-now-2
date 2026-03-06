@@ -185,7 +185,7 @@ const RecommendedForYou = () => {
   const subtitle =
     sourceNames.length > 0
       ? `Based on your active subscriptions and your interest in ${sourceNames.slice(0, 2).join(" & ")}${sourceNames.length > 2 ? ` and more` : ""}`
-      : "Picks based on your active subscriptions";
+      : "Picks based on your active subscriptions and favorite genres";
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-8">
