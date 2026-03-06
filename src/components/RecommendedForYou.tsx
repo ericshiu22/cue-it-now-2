@@ -75,13 +75,39 @@ const RecommendedForYou = () => {
           .order("created_at", { ascending: false })
           .limit(3);
 
-        if (!recentCues || recentCues.length === 0) {
+        let sources: SourceShow[] = recentCues || [];
+        let usingGenres = false;
+
+        // Fallback: if no cues, try genre-based discovery from onboarding preferences
+        if (sources.length === 0) {
+          const storedGenres = localStorage.getItem("cue-preferred-genres");
+          if (storedGenres) {
+            usingGenres = true;
+            const genreIds = JSON.parse(storedGenres) as number[];
+            const [movies, tvShows] = await Promise.all([
+              discoverByGenre("movie", genreIds),
+              discoverByGenre("tv", genreIds),
+            ]);
+            // Use top discover results as virtual "sources" for recommendation engine
+            const combined = [...movies.slice(0, 3), ...tvShows.slice(0, 3)];
+            sources = combined.map((r) => ({
+              tmdb_id: r.id,
+              title: r.title || r.name || "Unknown",
+              media_type: r.media_type,
+            }));
+          }
+        }
+
+        if (sources.length === 0) {
           setLoading(false);
           return;
         }
 
-        const sources: SourceShow[] = recentCues;
-        setSourceNames(sources.map((s) => s.title));
+        if (!usingGenres) {
+          setSourceNames(sources.map((s) => s.title));
+        } else {
+          setSourceNames([]);
+        }
 
         // Get all user cue tmdb_ids for filtering
         const { data: allCues } = await supabase

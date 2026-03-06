@@ -83,3 +83,19 @@ export const getWatchProviders = async (
     return null;
   }
 };
+
+export const discoverByGenre = async (
+  mediaType: "movie" | "tv",
+  genreIds: number[]
+): Promise<TMDBResult[]> => {
+  try {
+    const data = await callTmdb({
+      action: "discover",
+      media_type: mediaType,
+      genre_ids: genreIds.join(","),
+    });
+    return (data.results || []).map((r: TMDBResult) => ({ ...r, media_type: mediaType }));
+  } catch {
+    return [];
+  }
+};
