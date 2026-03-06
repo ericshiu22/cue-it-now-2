@@ -10,6 +10,7 @@ import NoticeAtCollection from "@/components/NoticeAtCollection";
 
 const Auth = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
