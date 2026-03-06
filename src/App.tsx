@@ -8,6 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import SplashScreen from "@/components/SplashScreen";
+import OnboardingFlow from "@/components/OnboardingFlow";
 import Index from "./pages/Index";
 import MyQueue from "./pages/MyQueue";
 import Friends from "./pages/Friends";
@@ -18,12 +19,16 @@ import Profile from "./pages/Profile";
 import SubscriptionHub from "./pages/SubscriptionHub";
 import LiveSports from "./pages/LiveSports";
 import EmailPreview from "./pages/EmailPreview";
+import OnboardingSubscriptions from "./pages/OnboardingSubscriptions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !localStorage.getItem("cue-onboarding-done")
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -36,7 +41,12 @@ const App = () => {
               <SplashScreen onComplete={() => setShowSplash(false)} />
             )}
           </AnimatePresence>
-          {!showSplash && (
+          <AnimatePresence>
+            {!showSplash && showOnboarding && (
+              <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
+            )}
+          </AnimatePresence>
+          {!showSplash && !showOnboarding && (
             <BrowserRouter>
               <Navbar />
               <Routes>
@@ -50,6 +60,7 @@ const App = () => {
                 <Route path="/live-sports" element={<LiveSports />} />
                 <Route path="/subscriptions" element={<SubscriptionHub />} />
                 <Route path="/email-preview" element={<EmailPreview />} />
+                <Route path="/onboarding-subs" element={<OnboardingSubscriptions />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
