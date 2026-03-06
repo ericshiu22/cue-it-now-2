@@ -21,7 +21,7 @@ serve(async (req) => {
       });
     }
 
-    const { action, query, media_type, id } = await req.json();
+    const { action, query, media_type, id, genre_ids } = await req.json();
 
     let url: string;
 
@@ -41,6 +41,12 @@ serve(async (req) => {
       case "recommendations":
         url = `${TMDB_BASE}/${media_type}/${id}/recommendations?api_key=${apiKey}&page=1`;
         break;
+      case "discover": {
+        const mt = media_type || "movie";
+        const genreParam = genre_ids ? `&with_genres=${genre_ids}` : "";
+        url = `${TMDB_BASE}/discover/${mt}?api_key=${apiKey}&sort_by=popularity.desc&include_adult=false${genreParam}&page=1`;
+        break;
+      }
       default:
         return new Response(JSON.stringify({ error: "Invalid action" }), {
           status: 400,
