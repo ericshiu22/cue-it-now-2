@@ -18,7 +18,7 @@ const slides = [
   },
   {
     icon: Users,
-    title: "What are your friends watching?",
+    title: "Wonder what your friends are watching?",
     subtitle: "Great recommendations live in group chats you'll never find again.",
     description:
       "See what your friends are streaming in real-time. Share queues, compare tastes, and never miss a recommendation.",
