@@ -13,17 +13,16 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [showFinal, setShowFinal] = useState(false);
 
   useEffect(() => {
-    // Cycle headlines every 1.2s, then show final taglines
     const interval = setInterval(() => {
       setHeadlineIndex((prev) => {
         if (prev < headlines.length - 1) return prev + 1;
         clearInterval(interval);
-        setTimeout(() => setShowFinal(true), 800);
+        setTimeout(() => setShowFinal(true), 1200);
         return prev;
       });
-    }, 1200);
+    }, 2000);
 
-    const dismiss = setTimeout(onComplete, 1200 * headlines.length + 4200);
+    const dismiss = setTimeout(onComplete, 2000 * headlines.length + 5200);
     return () => {
       clearInterval(interval);
       clearTimeout(dismiss);
@@ -44,31 +43,31 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
         <motion.img
           src={cueLogo}
           alt="Cue It"
-          className="h-48 sm:h-64 w-auto"
+          className="h-20 sm:h-24 w-auto mb-2"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         />
 
-        <div className="mt-6 h-16 flex items-center justify-center">
+        <div className="mt-8 h-24 flex items-center justify-center px-6">
           <AnimatePresence mode="wait">
             {!showFinal ? (
               <motion.p
                 key={headlineIndex}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-                className="text-base sm:text-lg md:text-xl text-muted-foreground font-medium text-center"
+                exit={{ opacity: 0, y: -24 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+                className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground text-center leading-tight"
               >
                 {headlines[headlineIndex]}
               </motion.p>
             ) : (
               <motion.div
                 key="final"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
                 className="flex flex-col items-center"
               >
                 <p className="text-sm sm:text-base text-muted-foreground tracking-widest uppercase">
