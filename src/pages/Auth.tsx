@@ -42,7 +42,12 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else if (!isLogin) {
-      toast.success("Account created! You're signed in.");
+      toast.success("Account created! Let's set up your subscriptions.");
+      const needsSubOnboarding = !localStorage.getItem("cue-subs-onboarded");
+      if (needsSubOnboarding) {
+        navigate("/onboarding-subs", { replace: true });
+        return;
+      }
     }
   };
 
