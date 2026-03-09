@@ -4,7 +4,7 @@ import cueLogo from "@/assets/cue-it-logo.png";
 
 const headlines = [
   { top: "Stop overpaying", bottom: "for streaming." },
-  { top: "Find what to watch", bottom: "in seconds, not hours." },
+  { top: "Find what you want", bottom: "to watch faster." },
 ];
 
 const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
@@ -12,9 +12,9 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 2200),
-      setTimeout(() => setPhase(2), 4400),
-      setTimeout(onComplete, 7000),
+      setTimeout(() => setPhase(1), 3000),
+      setTimeout(() => setPhase(2), 6000),
+      setTimeout(onComplete, 8000),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
