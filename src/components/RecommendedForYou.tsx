@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getRecommendations, getWatchProviders, getImageUrl, discoverByGenre, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
+import { getRecommendations, getWatchProviders, getImageUrl, type TMDBResult, type WatchProvider } from "@/lib/tmdb";
 import MovieCard from "./MovieCard";
 import SectionHeader from "./SectionHeader";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -75,39 +75,13 @@ const RecommendedForYou = () => {
           .order("created_at", { ascending: false })
           .limit(3);
 
-        let sources: SourceShow[] = recentCues || [];
-        let usingGenres = false;
-
-        // Fallback: if no cues, try genre-based discovery from onboarding preferences
-        if (sources.length === 0) {
-          const storedGenres = localStorage.getItem("cue-preferred-genres");
-          if (storedGenres) {
-            usingGenres = true;
-            const genreIds = JSON.parse(storedGenres) as number[];
-            const [movies, tvShows] = await Promise.all([
-              discoverByGenre("movie", genreIds),
-              discoverByGenre("tv", genreIds),
-            ]);
-            // Use top discover results as virtual "sources" for recommendation engine
-            const combined = [...movies.slice(0, 3), ...tvShows.slice(0, 3)];
-            sources = combined.map((r) => ({
-              tmdb_id: r.id,
-              title: r.title || r.name || "Unknown",
-              media_type: r.media_type,
-            }));
-          }
-        }
-
-        if (sources.length === 0) {
+        if (!recentCues || recentCues.length === 0) {
           setLoading(false);
           return;
         }
 
-        if (!usingGenres) {
-          setSourceNames(sources.map((s) => s.title));
-        } else {
-          setSourceNames([]);
-        }
+        const sources: SourceShow[] = recentCues;
+        setSourceNames(sources.map((s) => s.title));
 
         // Get all user cue tmdb_ids for filtering
         const { data: allCues } = await supabase
@@ -185,7 +159,7 @@ const RecommendedForYou = () => {
   const subtitle =
     sourceNames.length > 0
       ? `Based on your active subscriptions and your interest in ${sourceNames.slice(0, 2).join(" & ")}${sourceNames.length > 2 ? ` and more` : ""}`
-      : "Picks based on your active subscriptions and favorite genres";
+      : "Picks based on your active subscriptions";
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-8">
