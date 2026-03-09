@@ -180,10 +180,10 @@ const Auth = () => {
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => {
-              if (isLogin && !onboardingDone) {
+              if (isLogin) {
                 navigate("/onboarding");
               } else {
-                setIsLogin(!isLogin);
+                setIsLogin(true);
               }
             }}
             className="text-primary hover:underline font-medium"
