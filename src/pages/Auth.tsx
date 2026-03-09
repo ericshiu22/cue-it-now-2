@@ -12,8 +12,8 @@ const Auth = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const onboardingDone = localStorage.getItem("cue-onboarding-done") === "true";
-  const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "signup");
+  const cameFromOnboarding = searchParams.get("mode") === "signup";
+  const [isLogin, setIsLogin] = useState(!cameFromOnboarding);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
