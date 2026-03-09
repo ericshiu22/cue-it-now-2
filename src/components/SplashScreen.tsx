@@ -44,7 +44,11 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
                 {headlines[phase].top}
               </h1>
               <p className="text-2xl sm:text-4xl font-semibold text-gradient leading-tight">
-                {headlines[phase].bottom}
+                {phase === 1 ? (
+                  <span className="text-glow font-bold">{headlines[phase].bottom}</span>
+                ) : (
+                  headlines[phase].bottom
+                )}
               </p>
             </motion.div>
           )}
