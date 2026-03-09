@@ -4,7 +4,7 @@ import cueLogo from "@/assets/cue-it-logo.png";
 
 const headlines = [
   { top: "Stop overpaying", bottom: "for streaming." },
-  { top: "Find what you want", bottom: "to watch faster." },
+  { top: "Find what you want to", bottom: "watch faster." },
 ];
 
 const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
@@ -14,7 +14,7 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
     const timers = [
       setTimeout(() => setPhase(1), 3000),
       setTimeout(() => setPhase(2), 6000),
-      setTimeout(onComplete, 8000),
+      setTimeout(onComplete, 10000),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
@@ -44,7 +44,11 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
                 {headlines[phase].top}
               </h1>
               <p className="text-2xl sm:text-4xl font-semibold text-gradient leading-tight">
-                {headlines[phase].bottom}
+                {phase === 1 ? (
+                  <span className="text-glow font-bold">{headlines[phase].bottom}</span>
+                ) : (
+                  headlines[phase].bottom
+                )}
               </p>
             </motion.div>
           )}
