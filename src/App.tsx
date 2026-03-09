@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import SubscriptionHub from "./pages/SubscriptionHub";
 import LiveSports from "./pages/LiveSports";
 import EmailPreview from "./pages/EmailPreview";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
