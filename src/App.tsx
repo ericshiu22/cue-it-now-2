@@ -51,6 +51,7 @@ const App = () => {
                 <Route path="/live-sports" element={<LiveSports />} />
                 <Route path="/subscriptions" element={<SubscriptionHub />} />
                 <Route path="/email-preview" element={<EmailPreview />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
