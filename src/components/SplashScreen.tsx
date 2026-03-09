@@ -14,7 +14,7 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
     const timers = [
       setTimeout(() => setPhase(1), 3000),
       setTimeout(() => setPhase(2), 6000),
-      setTimeout(onComplete, 8000),
+      setTimeout(onComplete, 10000),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
