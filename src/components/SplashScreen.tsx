@@ -4,7 +4,7 @@ import cueLogo from "@/assets/cue-it-logo.png";
 
 const headlines = [
   { top: "Stop overpaying", bottom: "for streaming." },
-  { top: "Find what you want", bottom: "to watch faster." },
+  { top: "Find what you want to", bottom: "watch faster." },
 ];
 
 const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
