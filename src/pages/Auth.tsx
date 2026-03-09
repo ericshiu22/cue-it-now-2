@@ -179,7 +179,13 @@ const Auth = () => {
         <p className="text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              if (isLogin && !onboardingDone) {
+                navigate("/onboarding");
+              } else {
+                setIsLogin(!isLogin);
+              }
+            }}
             className="text-primary hover:underline font-medium"
           >
             {isLogin ? "Sign up" : "Sign in"}
