@@ -15,7 +15,7 @@ export default function Onboarding() {
     localStorage.setItem("cue-onboarding-seen-shows", JSON.stringify(data.seenShows));
     localStorage.setItem("cue-onboarding-want-to-watch", JSON.stringify(data.wantToWatch));
     localStorage.setItem("cue-onboarding-done", "true");
-    navigate("/auth");
+    navigate("/auth?mode=signup");
   };
 
   return <OnboardingFlow onComplete={handleComplete} />;
