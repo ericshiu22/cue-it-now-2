@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,9 @@ import NoticeAtCollection from "@/components/NoticeAtCollection";
 
 const Auth = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const onboardingDone = localStorage.getItem("cue-onboarding-done") === "true";
   const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -177,7 +179,13 @@ const Auth = () => {
         <p className="text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              if (isLogin && !onboardingDone) {
+                navigate("/onboarding");
+              } else {
+                setIsLogin(!isLogin);
+              }
+            }}
             className="text-primary hover:underline font-medium"
           >
             {isLogin ? "Sign up" : "Sign in"}
