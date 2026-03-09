@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import SubscriptionHub from "./pages/SubscriptionHub";
 import LiveSports from "./pages/LiveSports";
 import EmailPreview from "./pages/EmailPreview";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => {
                 <Route path="/live-sports" element={<LiveSports />} />
                 <Route path="/subscriptions" element={<SubscriptionHub />} />
                 <Route path="/email-preview" element={<EmailPreview />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
