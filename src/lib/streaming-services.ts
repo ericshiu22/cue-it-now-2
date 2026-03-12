@@ -3,6 +3,7 @@ export interface StreamingService {
   name: string;
   color: string;
   logo: string;
+  logoUrl: string;
   searchUrl: (title: string) => string;
   cancelUrl: string;
 }

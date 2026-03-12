@@ -138,6 +138,10 @@ export default function StepAudit({
           </motion.p>
         )}
       </div>
+
+      <p className="text-[10px] text-muted-foreground/60 text-center italic">
+        * Total streaming cost is estimated based on standard plan pricing and may vary.
+      </p>
     </div>
   );
 }
