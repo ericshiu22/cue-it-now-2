@@ -67,7 +67,12 @@ export default function StepAudit({
                     <Check className="h-2.5 w-2.5 text-primary-foreground" />
                   </div>
                 )}
-                <span className="text-2xl">{svc.logo}</span>
+                <img
+                  src={svc.logoUrl}
+                  alt={svc.name}
+                  className="h-8 w-8 rounded-md object-contain"
+                  loading="lazy"
+                />
                 <span
                   className={`text-[10px] font-medium text-center leading-tight ${
                     active ? "text-foreground" : "text-muted-foreground"
