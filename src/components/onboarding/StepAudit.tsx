@@ -67,12 +67,12 @@ export default function StepAudit({
                     <Check className="h-2.5 w-2.5 text-primary-foreground" />
                   </div>
                 )}
-                <img
-                  src={svc.logoUrl}
-                  alt={svc.name}
-                  className="h-8 w-8 rounded-md object-contain"
-                  loading="lazy"
-                />
+                <div
+                  className="h-8 w-8 rounded-md flex items-center justify-center text-xs font-bold text-white shrink-0"
+                  style={{ backgroundColor: svc.color }}
+                >
+                  {svc.name.charAt(0).toUpperCase()}
+                </div>
                 <span
                   className={`text-[10px] font-medium text-center leading-tight ${
                     active ? "text-foreground" : "text-muted-foreground"
