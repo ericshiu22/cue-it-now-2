@@ -7,22 +7,30 @@ import { SEASON_DATA, MOCK_GAMES } from "./mock-sports-data";
  * Handles EST/EDT automatically via Intl.
  */
 function etToUtc(date: Date, hour: number, minute = 0): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const h = String(hour).padStart(2, '0');
-  const m = String(minute).padStart(2, '0');
-  const etString = `${date.getFullYear()}-${month}-${day}T${h}:${m}:00`;
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York',
-    timeZoneName: 'shortOffset',
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    timeZoneName: "shortOffset",
+    hour12: false,
   });
-  const parts = formatter.formatToParts(date);
-  const tzPart = parts.find(p => p.type === 'timeZoneName');
-  const offsetMatch = tzPart?.value?.match(/GMT([+-]\d+)/);
-  const offsetHours = offsetMatch ? parseInt(offsetMatch[1]) : -5;
-  const utcDate = new Date(etString + "Z");
-  utcDate.setHours(utcDate.getHours() - offsetHours);
-  return utcDate.toISOString();
+
+  // Resolve ET offset for the target calendar day (handles DST transitions)
+  const reference = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  const parts = formatter.formatToParts(reference);
+  const tzPart = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT-5";
+  const offsetMatch = tzPart.match(/GMT([+-]\d{1,2})(?::?(\d{2}))?/);
+
+  const offsetHours = offsetMatch ? parseInt(offsetMatch[1], 10) : -5;
+  const offsetMinutesOnly = offsetMatch?.[2] ? parseInt(offsetMatch[2], 10) : 0;
+  const signedOffsetMinutes = offsetHours * 60 + (offsetHours >= 0 ? offsetMinutesOnly : -offsetMinutesOnly);
+
+  // ET wall-clock => UTC by subtracting the ET offset from wall-clock time
+  const etWallClockAsUtc = Date.UTC(year, month, day, hour, minute, 0);
+  const utcMs = etWallClockAsUtc - signedOffsetMinutes * 60_000;
+  return new Date(utcMs).toISOString();
 }
 
 const BROADCASTERS: Record<string, string[]> = {
@@ -57,6 +65,10 @@ const STREAMING: Record<string, string[]> = {
   NCAAW: ["hulu"],
 };
 
+const TEAM_EMOJI_BY_KEY = new Map(
+  ALL_SPORTS_TEAMS.map((t) => [`${t.league}:${t.abbr}`, t.emoji])
+);
+
 /** Deterministic pseudo-random from a seed string */
 function seededRandom(seed: string) {
   let h = 0;
@@ -74,28 +86,41 @@ function seededRandom(seed: string) {
 /** Generate a 2-week mock schedule for a given team (only if season is active) */
 export function generateTeamSchedule(team: TeamOption): GameData[] {
   const league = team.league as League;
-
-  // Check if the league's season is currently active
   const season = SEASON_DATA[league];
+  const now = new Date();
+
+  let seasonStartMs: number | null = null;
+  let seasonEndMs: number | null = null;
+
   if (season) {
-    const now = new Date();
     const seasonStart = new Date(season.startDate);
     const seasonEnd = new Date(season.endDate);
-    if (now < seasonStart || now > seasonEnd) {
+    seasonEnd.setHours(23, 59, 59, 999);
+
+    seasonStartMs = seasonStart.getTime();
+    seasonEndMs = seasonEnd.getTime();
+
+    const nowMs = now.getTime();
+    if (nowMs < seasonStartMs || nowMs > seasonEndMs) {
       return []; // Season not active
     }
   }
 
-  const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const twoWeeksEnd = todayStart + 14 * 24 * 60 * 60 * 1000;
+  const twoWeeksEndRaw = todayStart + 14 * 24 * 60 * 60 * 1000;
+  const twoWeeksEnd = seasonEndMs ? Math.min(twoWeeksEndRaw, seasonEndMs + 1) : twoWeeksEndRaw;
 
   // 1) Pull real games from MOCK_GAMES that involve this team
   const realGames = MOCK_GAMES.filter((g) => {
     if (g.league !== league) return false;
     if (g.homeAbbr !== team.abbr && g.awayAbbr !== team.abbr) return false;
+
     const gameTime = new Date(g.startTime).getTime();
-    return gameTime >= todayStart - 24 * 60 * 60 * 1000 && gameTime < twoWeeksEnd;
+    if (gameTime < todayStart - 24 * 60 * 60 * 1000 || gameTime >= twoWeeksEnd) return false;
+    if (seasonStartMs && gameTime < seasonStartMs) return false;
+    if (seasonEndMs && gameTime > seasonEndMs) return false;
+
+    return true;
   });
 
   // Track which day offsets are already covered by real games
@@ -112,7 +137,7 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
   );
   if (leagueTeams.length === 0) return realGames;
 
-  const rand = seededRandom(team.abbr + team.league);
+  const rand = seededRandom(`${team.abbr}-${team.league}`);
   const broadcasters = BROADCASTERS[league] || ["ESPN"];
   const streamingOptions = STREAMING[league] || ["hulu"];
 
@@ -129,7 +154,10 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
     // consume the random values regardless to keep determinism
     rand(); rand(); rand(); rand();
   }
-  const uniqueDays = [...new Set(slots)].sort((a, b) => a - b).slice(0, Math.max(0, gameCount - realGames.length));
+
+  const uniqueDays = [...new Set(slots)]
+    .sort((a, b) => a - b)
+    .slice(0, Math.max(0, gameCount - realGames.length));
 
   for (let i = 0; i < uniqueDays.length; i++) {
     const dayOffset = uniqueDays[i];
@@ -141,19 +169,24 @@ export function generateTeamSchedule(team: TeamOption): GameData[] {
     const gameDate = new Date(now);
     gameDate.setDate(gameDate.getDate() + dayOffset);
 
+    const gameDateMs = gameDate.getTime();
+    if (seasonStartMs && gameDateMs < seasonStartMs) continue;
+    if (seasonEndMs && gameDateMs > seasonEndMs) continue;
+
     const broadcaster = broadcasters[Math.floor(rand() * broadcasters.length)];
     const streaming = streamingOptions[Math.floor(rand() * streamingOptions.length)];
+    const opponentEmoji = TEAM_EMOJI_BY_KEY.get(`${league}:${opponent.abbr}`) ?? opponent.emoji;
 
     generatedGames.push({
-      id: `sched-${team.abbr}-${i}`,
+      id: `sched-${league}-${team.abbr}-${dayOffset}-${opponent.abbr}-${i}`,
       league,
       homeTeam: isHome ? team.name : opponent.name,
       homeAbbr: isHome ? team.abbr : opponent.abbr,
-      homeLogo: team.emoji,
+      homeLogo: isHome ? team.emoji : opponentEmoji,
       homeScore: null,
       awayTeam: isHome ? opponent.name : team.name,
       awayAbbr: isHome ? opponent.abbr : team.abbr,
-      awayLogo: opponent.emoji,
+      awayLogo: isHome ? opponentEmoji : team.emoji,
       awayScore: null,
       status: "scheduled",
       startTime: etToUtc(gameDate, hour, minute),

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { ALL_SPORTS_TEAMS, type TeamOption } from "@/lib/all-sports-teams";
 import { generateTeamSchedule } from "@/lib/generate-team-schedule";
-import { SEASON_DATA } from "@/lib/mock-sports-data";
+import { SEASON_DATA, isLeagueInSeason } from "@/lib/mock-sports-data";
 import { getService } from "@/lib/streaming-services";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -33,6 +33,13 @@ const formatTime = (iso: string) => {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 };
 
+const normalizeSearchText = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceIds, isFavorite, onAddFavorite, onRemoveFavorite, externalSelectedTeam }: Props) => {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
@@ -48,11 +55,34 @@ const TeamScheduleSearch = ({ followedGames, onFollow, onUnfollow, userServiceId
 
   const filtered = useMemo(() => {
     if (!query.trim()) return [];
-    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-    return ALL_SPORTS_TEAMS.filter((t) => {
-      const words = `${t.name} ${t.abbr} ${t.league}`.toLowerCase().split(/\s+/);
-      return terms.every((term) => words.some((w) => w.startsWith(term)));
-    }).slice(0, 12);
+
+    const normalizedQuery = normalizeSearchText(query);
+    const terms = normalizedQuery.split(" ").filter(Boolean);
+
+    return ALL_SPORTS_TEAMS
+      .map((team) => {
+        const searchable = normalizeSearchText(`${team.name} ${team.abbr} ${team.league}`);
+        const allTermsPresent = terms.every((term) => searchable.includes(term));
+        if (!allTermsPresent) return null;
+
+        const abbr = team.abbr.toLowerCase();
+        const name = normalizeSearchText(team.name);
+        const league = normalizeSearchText(team.league);
+        const firstTerm = terms[0] ?? "";
+
+        let score = 0;
+        if (abbr === firstTerm) score += 5;
+        if (name.startsWith(normalizedQuery)) score += 4;
+        if (abbr.startsWith(firstTerm)) score += 3;
+        if (league.startsWith(firstTerm)) score += 2;
+        if (isLeagueInSeason(team.league)) score += 1;
+
+        return { team, score };
+      })
+      .filter((entry): entry is { team: TeamOption; score: number } => entry !== null)
+      .sort((a, b) => b.score - a.score || a.team.name.localeCompare(b.team.name))
+      .slice(0, 24)
+      .map((entry) => entry.team);
   }, [query]);
 
   const schedule = useMemo(() => {
