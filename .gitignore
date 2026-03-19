@@ -26,5 +26,8 @@ dist-ssr
 .env
 .env.*
 
+# Supabase local temp/cache
+supabase/.temp/
+
 # Claude AI session data
 .claude/
