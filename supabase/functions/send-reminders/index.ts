@@ -15,10 +15,34 @@ interface QueuedNotification {
   created_at: string;
 }
 
+// Color accents per notification type for email styling
+const alertColors: Record<string, string> = {
+  friend_activity: "#8b5cf6",    // purple
+  new_season: "#f59e0b",         // amber
+  new_episode: "#3b82f6",        // blue
+  provider_change: "#ef4444",    // red
+  subscription_expiry: "#10b981", // green
+  trending: "#6366f1",            // indigo
+};
+
+function buildEmailHtml(alertType: string, subject: string, body: string): string {
+  const accent = alertColors[alertType] || "#1a1a2e";
+
+  return `<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:24px;">
+    <div style="border-left:4px solid ${accent};padding-left:16px;margin-bottom:16px;">
+      <h2 style="color:#1a1a2e;margin:0 0 8px 0;font-size:18px;">${subject}</h2>
+    </div>
+    <p style="color:#555;line-height:1.6;margin:0 0 16px 0;">${body}</p>
+    <hr style="border:none;border-top:1px solid #eee;margin:24px 0;" />
+    <p style="color:#999;font-size:12px;margin:0;">Sent by Cue It &bull; Manage preferences in your profile settings</p>
+  </div>`;
+}
+
 async function sendEmailViaResend(
   to: string,
   subject: string,
-  body: string
+  body: string,
+  alertType: string = "trending"
 ): Promise<boolean> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
@@ -37,12 +61,7 @@ async function sendEmailViaResend(
         from: "Cue It <notifications@resend.dev>",
         to: [to],
         subject,
-        html: `<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:24px;">
-          <h2 style="color:#1a1a2e;margin-bottom:8px;">${subject}</h2>
-          <p style="color:#555;line-height:1.6;">${body}</p>
-          <hr style="border:none;border-top:1px solid #eee;margin:24px 0;" />
-          <p style="color:#999;font-size:12px;">Sent by Cue It • Manage preferences in your profile settings</p>
-        </div>`,
+        html: buildEmailHtml(alertType, subject, body),
       }),
     });
     const data = await res.json();
@@ -118,7 +137,12 @@ Deno.serve(async (req) => {
 
       switch (alertLevel) {
         case "minimalist":
-          if (notif.alert_type === "subscription_expiry") {
+          // Minimalist: only money-saving alerts + new seasons (big events)
+          if (
+            notif.alert_type === "subscription_expiry" ||
+            notif.alert_type === "new_season" ||
+            notif.alert_type === "provider_change"
+          ) {
             allowed = true;
           } else {
             reason = "minimalist_filter";
@@ -176,7 +200,8 @@ Deno.serve(async (req) => {
           const emailSent = await sendEmailViaResend(
             profile.email,
             notif.title,
-            notif.body
+            notif.body,
+            notif.alert_type
           );
           if (emailSent) channels.push("email");
         }

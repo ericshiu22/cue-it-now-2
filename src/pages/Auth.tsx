@@ -45,6 +45,10 @@ const Auth = () => {
       toast.error(error.message);
     } else if (!isLogin) {
       toast.success("Account created! You're signed in.");
+      // Fire welcome milestone: Beehiiv subscribe + welcome email + GA4 event
+      supabase.functions.invoke("milestone-webhook", {
+        body: { milestone_type: "welcome" },
+      }).catch((err) => console.error("[MILESTONE] welcome failed:", err));
     }
   };
 
