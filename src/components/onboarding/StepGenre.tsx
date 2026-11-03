@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Eye, Bookmark, Check } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { GENRE_LIST, GENRE_SHOWS } from "./genre-data";
+import { GENRE_LIST, getDedupedGenreShows } from "./genre-data";
 import { ShowSelection } from "./types";
 
 interface Props {
@@ -59,8 +59,8 @@ export default function StepGenre({
 
       {genres.length > 0 && (
         <div className="space-y-5">
-          {genres.map((genre) => {
-            const shows = GENRE_SHOWS[genre] || [];
+          {getDedupedGenreShows(genres).map(({ genre, shows }) => {
+            if (shows.length === 0) return null;
             return (
               <motion.div
                 key={genre}
