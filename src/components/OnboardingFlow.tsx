@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import StepHabit from "./onboarding/StepHabit";
 import StepAudit from "./onboarding/StepAudit";
 import { SERVICE_PRICES } from "./onboarding/StepAudit";
 import StepGenre from "./onboarding/StepGenre";
@@ -12,8 +11,14 @@ import { OnboardingData, ShowSelection } from "./onboarding/types";
 
 export type { OnboardingData };
 
-const STORAGE_KEY = "cue-onboarding-progress";
-const TOTAL_STEPS = 5; // Habit, Audit, Genre, Processing, Summary
+// v2: the "How do you find shows?" step was removed, so step indices from
+// older saved progress no longer line up. Bumping the key discards it.
+const STORAGE_KEY = "cue-onboarding-progress-v2";
+const LEGACY_STORAGE_KEY = "cue-onboarding-progress";
+const TOTAL_STEPS = 4; // Audit, Genre, Processing, Summary
+
+// Used by the summary's "time wasted searching" stat now that we no longer ask.
+const DEFAULT_SEARCH_TIME = 15;
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
@@ -27,6 +32,7 @@ interface OnboardingFlowProps {
 
 function loadProgress() {
   try {
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
@@ -41,20 +47,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [direction, setDirection] = useState(1);
 
   // Step 1
-  const [habits, setHabits] = useState<string[]>(saved?.habits ?? []);
-  const [searchTime, setSearchTime] = useState(saved?.searchTime ?? 15);
-  const [friendSuggestions, setFriendSuggestions] = useState(saved?.friendSuggestions ?? true);
-
-  // Step 2
   const [selectedServices, setSelectedServices] = useState<string[]>(saved?.selectedServices ?? []);
   const [guessedSpend, setGuessedSpend] = useState<string>(saved?.guessedSpend ?? "");
 
-  // Step 3
+  // Step 2
   const [genres, setGenres] = useState<string[]>(saved?.genres ?? []);
   const [seenShows, setSeenShows] = useState<string[]>(saved?.seenShows ?? []);
   const [wantToWatch, setWantToWatch] = useState<ShowSelection[]>(saved?.wantToWatch ?? []);
 
-  // Step 4 done
+  // Step 3 done
   const [processingDone, setProcessingDone] = useState(false);
 
   const realCost = selectedServices.reduce(
@@ -64,14 +65,11 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   // Persist progress
   useEffect(() => {
-    if (step < 3) {
+    if (step < 2) {
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
           step,
-          habits,
-          searchTime,
-          friendSuggestions,
           selectedServices,
           guessedSpend,
           genres,
@@ -80,7 +78,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         })
       );
     }
-  }, [step, habits, searchTime, friendSuggestions, selectedServices, guessedSpend, genres, seenShows, wantToWatch]);
+  }, [step, selectedServices, guessedSpend, genres, seenShows, wantToWatch]);
 
   const next = () => {
     if (step < TOTAL_STEPS - 1) {
@@ -90,7 +88,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   };
 
   const prev = () => {
-    if (step > 0 && step < 3) {
+    if (step > 0 && step < 2) {
       setDirection(-1);
       setStep((s) => s - 1);
     }
@@ -99,15 +97,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const handleProcessingDone = useCallback(() => {
     setProcessingDone(true);
     setDirection(1);
-    setStep(4);
+    setStep(3);
   }, []);
 
   const handleStart = () => {
     localStorage.removeItem(STORAGE_KEY);
     onComplete({
-      habits,
-      searchTime,
-      friendSuggestions,
+      habits: [],
+      searchTime: DEFAULT_SEARCH_TIME,
+      friendSuggestions: true,
       selectedServices,
       guessedSpend: parseFloat(guessedSpend) || 0,
       realCost,
@@ -116,9 +114,6 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       wantToWatch,
     });
   };
-
-  const toggleHabit = (id: string) =>
-    setHabits((h) => (h.includes(id) ? h.filter((x) => x !== id) : [...h, id]));
 
   const toggleService = (id: string) =>
     setSelectedServices((s) =>
@@ -142,7 +137,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         : [...prev, show]
     );
 
-  const isProcessingOrSummary = step >= 3;
+  const isProcessingOrSummary = step >= 2;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden">
@@ -173,27 +168,6 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <AnimatePresence mode="wait" custom={direction}>
           {step === 0 && (
             <motion.div
-              key="habit"
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <StepHabit
-                habits={habits}
-                searchTime={searchTime}
-                friendSuggestions={friendSuggestions}
-                onToggleHabit={toggleHabit}
-                onSearchTimeChange={setSearchTime}
-                onFriendSuggestionsChange={setFriendSuggestions}
-              />
-            </motion.div>
-          )}
-
-          {step === 1 && (
-            <motion.div
               key="audit"
               custom={direction}
               variants={slideVariants}
@@ -212,7 +186,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
           )}
 
-          {step === 2 && (
+          {step === 1 && (
             <motion.div
               key="genre"
               custom={direction}
@@ -233,7 +207,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <motion.div
               key="processing"
               custom={direction}
@@ -247,7 +221,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
           )}
 
-          {step === 4 && (
+          {step === 3 && (
             <motion.div
               key="summary"
               custom={direction}
@@ -260,7 +234,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <StepSummary
                 realCost={realCost}
                 guessedSpend={parseFloat(guessedSpend) || 0}
-                searchTime={searchTime}
+                searchTime={DEFAULT_SEARCH_TIME}
                 onStart={handleStart}
               />
             </motion.div>
@@ -280,7 +254,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <ChevronLeft className="h-4 w-4" /> Back
           </Button>
           <Button onClick={next} className="gap-1 glow">
-            {step === 2 ? "See My Results" : "Next"}{" "}
+            {step === 1 ? "See My Results" : "Next"}{" "}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

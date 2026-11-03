@@ -1,4 +1,4 @@
-import { GenreShowMap } from "./types";
+import { GenreShow, GenreShowMap } from "./types";
 
 export const GENRE_LIST = [
   "Sci-Fi",
@@ -89,3 +89,32 @@ export const GENRE_SHOWS: GenreShowMap = {
     { title: "Survivor", poster: "🏝️", year: "2000", service: "Paramount+" },
   ],
 };
+
+/** Normalizes a title so "The Bear", "the bear " and "The Bear!" match. */
+export function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Returns the shows to display for each selected genre, in selection order,
+ * with any title already shown under an earlier genre removed. A show that
+ * fits several genres therefore appears only once across the whole picker.
+ */
+export function getDedupedGenreShows(
+  genres: string[],
+  showMap: GenreShowMap = GENRE_SHOWS
+): { genre: string; shows: GenreShow[] }[] {
+  const seen = new Set<string>();
+  return genres.map((genre) => {
+    const shows = (showMap[genre] || []).filter((show) => {
+      const key = normalizeTitle(show.title);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return { genre, shows };
+  });
+}
